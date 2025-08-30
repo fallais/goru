@@ -5,6 +5,7 @@ import (
 	"goru/internal/models"
 	"goru/internal/services/files"
 	"goru/internal/services/formatters"
+	"goru/internal/services/subtitles/opensubtitles"
 	"goru/pkg/log"
 
 	"github.com/fatih/color"
@@ -31,8 +32,11 @@ func Run(cmd *cobra.Command, args []string) {
 	// Create the formatter service
 	formatterService := formatters.NewFormatterService("", "")
 
+	// Create the subtitles provider
+	subtitleProvider := opensubtitles.New(viper.GetString("providers.opensubtitles.api_key"))
+
 	// Determine directories to scan (whether user is giving a single dir or multiple dirs with config file)
-	plan, err := common.RunPlan(fileService, formatterService, config)
+	plan, err := common.RunPlan(fileService, formatterService, config, subtitleProvider)
 	if err != nil && err != common.ErrNoFilesFound {
 		log.Fatal("failed to run plan", zap.Error(err))
 	}

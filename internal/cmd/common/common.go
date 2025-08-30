@@ -9,6 +9,7 @@ import (
 	"goru/internal/services/plans"
 	"goru/internal/services/providers"
 	"goru/internal/services/providers/tmdb"
+	"goru/internal/services/subtitles"
 	"goru/pkg/log"
 
 	"github.com/fatih/color"
@@ -27,7 +28,7 @@ var (
 
 var ErrNoFilesFound = errors.New("no video files found")
 
-func RunPlan(fileService *files.FileService, formatterService *formatters.FormatterService, config models.Config) (*plans.Plan, error) {
+func RunPlan(fileService *files.FileService, formatterService *formatters.FormatterService, config models.Config, subtitleProvider subtitles.SubtitleProvider) (*plans.Plan, error) {
 	// Determine directories to scan (whether user is giving a single dir or multiple dirs with config file)
 	var directories []models.Directory
 	if viper.GetString("dir") != "" {
@@ -44,6 +45,7 @@ func RunPlan(fileService *files.FileService, formatterService *formatters.Format
 
 	// Scan each directory for video files
 	var videoFiles []*models.VideoFile
+	var subtitleFiles []string
 	for _, dir := range directories {
 		if string(dir.ConflictStrategy) == "" {
 			dir.ConflictStrategy = models.DefaultConflictStrategy
@@ -87,6 +89,19 @@ func RunPlan(fileService *files.FileService, formatterService *formatters.Format
 			if err != nil {
 				log.Error("failed to provide metadata", zap.Error(err))
 			}
+
+			// Download subtitles for each video file
+			if viper.GetBool("subtitles") {
+				log.Debug("providing metadata for file", zap.String("file", file.Filename))
+
+				sub, err := subtitleProvider.Get(file, viper.GetString("subtitles.language"))
+				if err != nil {
+					log.Error("failed to download subtitles", zap.Error(err))
+				} else {
+					subtitleFiles = append(subtitleFiles, sub)
+				}
+
+			}
 		}
 
 		videoFiles = append(videoFiles, currentFiles...)
@@ -99,7 +114,7 @@ func RunPlan(fileService *files.FileService, formatterService *formatters.Format
 	fmt.Printf("Found %d video file(s)\n\n", len(videoFiles))
 
 	// Create the plan
-	plan, err := plans.NewPlan(videoFiles, formatterService)
+	plan, err := plans.NewPlan(videoFiles, subtitleFiles, formatterService)
 	if err != nil {
 		log.Fatal("failed to create plan", zap.Error(err))
 	}

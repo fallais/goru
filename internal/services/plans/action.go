@@ -13,4 +13,7 @@ const (
 	// ActionSkip indicates a file should be skipped.
 	// We do not use ActionNoop because we want to explicitly notify the user.
 	ActionSkip Action = '-'
+
+	// ActionCreate indicates a file should be created.
+	ActionCreate Action = '+'
 )

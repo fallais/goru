@@ -39,12 +39,15 @@ func init() {
 	rootCmd.PersistentFlags().StringP("type", "t", "auto", "Media type: movie, tv, or auto")
 	rootCmd.PersistentFlags().String("provider", "tmdb", "Database provider: tmdb, tvdb or anidb")
 	rootCmd.PersistentFlags().String("conflict", "append", "Conflict resolution strategy: skip, append, timestamp, prompt, overwrite, backup")
+	rootCmd.PersistentFlags().Bool("subtitles", false, "Enable subtitles download")
+
 	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug mode")
 
 	// Bind flags to viper
 	viper.BindPFlag("type", rootCmd.PersistentFlags().Lookup("type"))
 	viper.BindPFlag("provider", rootCmd.PersistentFlags().Lookup("provider"))
 	viper.BindPFlag("conflict", rootCmd.PersistentFlags().Lookup("conflict"))
+	viper.BindPFlag("subtitles", rootCmd.PersistentFlags().Lookup("subtitles"))
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 
 	// Env

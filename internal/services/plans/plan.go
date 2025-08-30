@@ -44,7 +44,7 @@ type Plan struct {
 }
 
 // NewPlan creates a new rename plan for the given video files
-func NewPlan(videoFiles []*models.VideoFile, formatterService *formatters.FormatterService) (*Plan, error) {
+func NewPlan(videoFiles []*models.VideoFile, subtitleFiles []string, formatterService *formatters.FormatterService) (*Plan, error) {
 	plan := &Plan{
 		ID:        uuid.New().String(),
 		Timestamp: time.Now(),
@@ -68,6 +68,20 @@ func NewPlan(videoFiles []*models.VideoFile, formatterService *formatters.Format
 		}
 
 		plan.Changes = append(plan.Changes, *change)
+	}
+
+	// Create subtitle changes
+	for _, subtitleFile := range subtitleFiles {
+		change := Change{
+			ID:     uuid.New().String(),
+			Action: ActionCreate,
+			Before: models.VideoFile{
+				Path:     subtitleFile,
+				Filename: filepath.Base(subtitleFile),
+			},
+		}
+
+		plan.Changes = append(plan.Changes, change)
 	}
 
 	// Detect conflicts

@@ -10,6 +10,7 @@ import (
 	"goru/internal/services/formatters"
 	"goru/internal/services/plans"
 	"goru/internal/services/states"
+	"goru/internal/services/subtitles/opensubtitles"
 	"goru/pkg/log"
 
 	"github.com/spf13/cobra"
@@ -35,8 +36,11 @@ func Run(cmd *cobra.Command, args []string) {
 	// Create the formatter service
 	formatterService := formatters.NewFormatterService("", "")
 
+	// Create the subtitles provider
+	subtitleProvider := opensubtitles.New(viper.GetString("providers.opensubtitles.api_key"))
+
 	// Run plan before applying changes
-	plan, err := common.RunPlan(fileService, formatterService, config)
+	plan, err := common.RunPlan(fileService, formatterService, config, subtitleProvider)
 	if err != nil {
 		log.Fatal("failed to run plan", zap.Error(err))
 	}

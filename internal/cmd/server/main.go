@@ -261,7 +261,7 @@ func (s *Server) processDirectory(directory models.Directory) (*plans.Plan, erro
 	}
 
 	// Create the plan
-	plan, err := plans.NewPlan(videoFiles, s.formatterService)
+	plan, err := plans.NewPlan(videoFiles, nil, s.formatterService)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create plan: %w", err)
 	}
