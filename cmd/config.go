@@ -13,7 +13,7 @@ import (
 var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Manage configuration settings",
-	Long: `Manage GoName configuration settings.
+	Long: `Manage Goru configuration settings.
 
 You can set, get, and list configuration values using this command.
 Configuration values are stored in ~/.goru.yaml by default.
@@ -106,7 +106,7 @@ var configInitCmd = &cobra.Command{
 		}
 
 		// Create default config
-		defaultConfig := `# GoName Configuration File
+		defaultConfig := `# Goru Configuration File
 # Set your TMDB API key here
 tmdb:
   api_key: ""

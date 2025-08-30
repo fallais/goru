@@ -8,7 +8,7 @@ import (
 var stateCmd = &cobra.Command{
 	Use:   "state",
 	Short: "Manage rename operation state",
-	Long: `Manage the state of rename operations performed by GoName.
+	Long: `Manage the state of rename operations performed by Goru.
 
 The state command allows you to:
 - List previous rename operations

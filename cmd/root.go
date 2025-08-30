@@ -14,7 +14,7 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "goru",
 	Short: "A tool that helps you rename your video files",
-	Long: `GoName is a CLI application that helps you rename video files by fetching
+	Long: `Goru is a CLI application that helps you rename video files by fetching
 information from TheMovieDB, TheTVDB, and other databases.
 
 It can rename large amounts of video files automatically by matching them

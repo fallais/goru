@@ -15,7 +15,7 @@ var (
 var stateLsCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List rename operations from state",
-	Long: `List rename operations that have been performed by GoName.
+	Long: `List rename operations that have been performed by Goru.
 
 This command shows a history of all rename operations, including:
 - Original and new file names
