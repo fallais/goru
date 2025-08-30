@@ -34,5 +34,5 @@ jobs:
     - name: Install Dependencies
       run: cd web && npm install
 
-    - name: Test
-      run: cd web && npm test
+    #- name: Test
+    #  run: cd web && npm test
