@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"goru/internal/models"
 	"goru/internal/services/files"
@@ -245,23 +246,18 @@ func (s *Server) processDirectory(directory models.Directory) (*plans.Plan, erro
 		return nil, fmt.Errorf("unsupported provider: %s", directory.Provider)
 	}
 
-	// Lookup media information for each file
-	for _, file := range videoFiles {
-		// Set conflict strategy (use default if not specified)
-		if file.ConflictStrategy == "" {
-			file.ConflictStrategy = models.DefaultConflictStrategy
-		}
-
-		// Provide metadata for the file
-		err := provider.Provide(file)
-		if err != nil {
-			log.Error("failed to provide metadata", zap.Error(err), zap.String("file", file.Path))
-			// Continue with other files even if one fails
-		}
+	// Lookup media information for each file concurrently
+	maxConcurrent := viper.GetInt("max_concurrent")
+	if maxConcurrent <= 0 {
+		maxConcurrent = 10 // fallback to default
+	}
+	processedFiles, err := processFilesMetadataConcurrently(videoFiles, provider, maxConcurrent)
+	if err != nil {
+		log.Error("failed to process files concurrently", zap.Error(err))
 	}
 
 	// Create the plan
-	plan, err := plans.NewPlan(videoFiles, nil, s.formatterService)
+	plan, err := plans.NewPlan(processedFiles, nil, s.formatterService)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create plan: %w", err)
 	}
@@ -289,4 +285,55 @@ func (s *Server) writeError(w http.ResponseWriter, message string, statusCode in
 
 	response := ErrorResponse{Error: message}
 	json.NewEncoder(w).Encode(response)
+}
+
+// processFilesMetadataConcurrently processes video files metadata concurrently with a limited number of workers
+func processFilesMetadataConcurrently(files []*models.VideoFile, provider providers.Provider, maxConcurrent int) ([]*models.VideoFile, error) {
+	if len(files) == 0 {
+		return files, nil
+	}
+
+	// Set conflict strategy for all files (use default if not specified)
+	for _, file := range files {
+		if file.ConflictStrategy == "" {
+			file.ConflictStrategy = models.DefaultConflictStrategy
+		}
+	}
+
+	// Create semaphore to limit concurrent operations
+	semaphore := make(chan struct{}, maxConcurrent)
+	var wg sync.WaitGroup
+	var hasErrors bool
+	var mu sync.Mutex
+
+	// Process each file concurrently
+	for _, file := range files {
+		wg.Add(1)
+		go func(f *models.VideoFile) {
+			defer wg.Done()
+
+			// Acquire semaphore
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }()
+
+			// Provide metadata for the file
+			err := provider.Provide(f)
+			if err != nil {
+				log.Error("failed to provide metadata", zap.Error(err), zap.String("file", f.Path))
+				mu.Lock()
+				hasErrors = true
+				mu.Unlock()
+			}
+		}(file)
+	}
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+
+	var err error
+	if hasErrors {
+		err = fmt.Errorf("some files failed to process metadata (check logs for details)")
+	}
+
+	return files, err
 }

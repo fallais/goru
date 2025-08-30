@@ -5,8 +5,9 @@ import (
 )
 
 type Config struct {
-	Providers   map[string]Provider `yaml:"providers" mapstructure:"providers"`
-	Directories []Directory         `yaml:"directories" mapstructure:"directories"`
+	Providers     map[string]Provider `yaml:"providers" mapstructure:"providers"`
+	Directories   []Directory         `yaml:"directories" mapstructure:"directories"`
+	MaxConcurrent int                 `yaml:"max_concurrent" mapstructure:"max_concurrent"`
 }
 
 type Provider struct {

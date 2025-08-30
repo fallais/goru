@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"goru/internal/models"
@@ -11,10 +12,12 @@ import (
 	"goru/internal/services/providers/tmdb"
 	"goru/internal/services/subtitles"
 	"goru/pkg/log"
+	"sync"
 
 	"github.com/fatih/color"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"golang.org/x/sync/semaphore"
 )
 
 var (
@@ -82,29 +85,16 @@ func RunPlan(fileService *files.FileService, formatterService *formatters.Format
 		for _, file := range currentFiles {
 			// Set the conflict strategy
 			file.ConflictStrategy = models.ConflictStrategy(dir.ConflictStrategy)
-
-			// Provider filename with metadata
-			log.Debug("providing metadata for file", zap.String("file", file.Filename))
-			err := provider.Provide(file)
-			if err != nil {
-				log.Error("failed to provide metadata", zap.Error(err))
-			}
-
-			// Download subtitles for each video file
-			if viper.GetBool("subtitles") {
-				log.Debug("providing metadata for file", zap.String("file", file.Filename))
-
-				sub, err := subtitleProvider.Get(file, viper.GetString("subtitles.language"))
-				if err != nil {
-					log.Error("failed to download subtitles", zap.Error(err))
-				} else {
-					subtitleFiles = append(subtitleFiles, sub)
-				}
-
-			}
 		}
 
-		videoFiles = append(videoFiles, currentFiles...)
+		// Process files concurrently
+		processedFiles, processedSubtitles, err := processFilesConcurrently(currentFiles, provider, subtitleProvider, viper.GetInt("parallelism"))
+		if err != nil {
+			log.Error("failed to process files concurrently", zap.Error(err))
+		}
+
+		videoFiles = append(videoFiles, processedFiles...)
+		subtitleFiles = append(subtitleFiles, processedSubtitles...)
 	}
 
 	if len(videoFiles) == 0 {
@@ -205,4 +195,80 @@ func printPlanSummary(plan *plans.Plan, alreadyCorrectCount, needsRenameCount, e
 		fmt.Println()
 		Yellow.Println("To apply these changes, run: goru apply")
 	}
+}
+
+// FileProcessResult holds the result of processing a single file
+type FileProcessResult struct {
+	File     *models.VideoFile
+	Subtitle string
+	Error    error
+}
+
+func processFilesConcurrently(files []*models.VideoFile, provider providers.Provider, subtitleProvider subtitles.SubtitleProvider, maxConcurrent int) ([]*models.VideoFile, []string, error) {
+	if len(files) == 0 {
+		return nil, nil, nil
+	}
+
+	sem := semaphore.NewWeighted(int64(maxConcurrent))
+	results := make(chan FileProcessResult, len(files))
+	var wg sync.WaitGroup
+
+	for _, f := range files {
+		// Acquire semaphore to limit concurrency
+		if err := sem.Acquire(context.Background(), 1); err != nil {
+			continue
+		}
+
+		wg.Add(1)
+		go func(f *models.VideoFile) {
+			defer wg.Done()
+
+			result := FileProcessResult{File: f}
+
+			// Process file synchronously
+			log.Debug("providing metadata", zap.String("file", f.Filename))
+			if err := provider.Provide(f); err != nil {
+				result.Error = err
+			}
+
+			log.Debug("checking for subtitles", zap.String("file", f.Filename))
+			if viper.GetBool("subtitles") {
+				sub, err := subtitleProvider.Get(f, viper.GetString("subtitles.language"))
+				if err == nil {
+					result.Subtitle = sub
+				}
+			}
+
+			results <- result
+			sem.Release(1)
+		}(f)
+	}
+
+	// Close results after all goroutines finish
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	// Collect results
+	var processedFiles []*models.VideoFile
+	var subtitleFiles []string
+	var hasErrors bool
+
+	for result := range results {
+		processedFiles = append(processedFiles, result.File)
+		if result.Subtitle != "" {
+			subtitleFiles = append(subtitleFiles, result.Subtitle)
+		}
+		if result.Error != nil {
+			hasErrors = true
+		}
+	}
+
+	var err error
+	if hasErrors {
+		err = fmt.Errorf("some files failed to process (check logs for details)")
+	}
+
+	return processedFiles, subtitleFiles, err
 }

@@ -40,6 +40,7 @@ func init() {
 	rootCmd.PersistentFlags().String("provider", "tmdb", "Database provider: tmdb, tvdb or anidb")
 	rootCmd.PersistentFlags().String("conflict", "append", "Conflict resolution strategy: skip, append, timestamp, prompt, overwrite, backup")
 	rootCmd.PersistentFlags().Bool("subtitles", false, "Enable subtitles download")
+	rootCmd.PersistentFlags().Int("parallelism", 10, "Maximum number of concurrent file processing operations")
 
 	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug mode")
 
@@ -48,6 +49,7 @@ func init() {
 	viper.BindPFlag("provider", rootCmd.PersistentFlags().Lookup("provider"))
 	viper.BindPFlag("conflict", rootCmd.PersistentFlags().Lookup("conflict"))
 	viper.BindPFlag("subtitles", rootCmd.PersistentFlags().Lookup("subtitles"))
+	viper.BindPFlag("parallelism", rootCmd.PersistentFlags().Lookup("parallelism"))
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 
 	// Env
@@ -58,6 +60,7 @@ func init() {
 	viper.SetDefault("conflict", "append")
 	viper.SetDefault("type", "auto")
 	viper.SetDefault("provider", "tmdb")
+	viper.SetDefault("parallelism", 10)
 }
 
 // initConfig reads in config file and ENV variables if set.
