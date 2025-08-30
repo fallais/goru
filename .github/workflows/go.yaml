@@ -1,0 +1,38 @@
+name: Tests and build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 1.24
+
+    - name: Test
+      run: go mod download && go test -v ./...
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Install Node.js
+      uses: actions/setup-node@v5
+      with:
+        node-version: '18'
+
+    - name: Change to web directory
+      run: cd web
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Test
+      run: npm test
