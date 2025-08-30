@@ -3,6 +3,10 @@ name: Trivy
 on:
   push:
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   security:
     name: Security scanning
