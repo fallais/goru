@@ -17,16 +17,16 @@ The state command allows you to:
 
 Examples:
   # List all rename operations
-  goname state ls
+  goru state ls
   
   # List only unreversed operations
-  goname state ls --active
+  goru state ls --active
   
   # Revert the last rename operation
-  goname state revert
+  goru state revert
   
   # Revert a specific rename operation
-  goname state revert --id abc123`,
+  goru state revert --id abc123`,
 }
 
 func init() {

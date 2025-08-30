@@ -16,20 +16,20 @@ var configCmd = &cobra.Command{
 	Long: `Manage GoName configuration settings.
 
 You can set, get, and list configuration values using this command.
-Configuration values are stored in ~/.goname.yaml by default.
+Configuration values are stored in ~/.goru.yaml by default.
 
 Examples:
   # Set TMDB API key
-  goname config set tmdb.api_key YOUR_API_KEY
+  goru config set tmdb.api_key YOUR_API_KEY
   
   # Get current API key
-  goname config get tmdb.api_key
+  goru config get tmdb.api_key
   
   # List all configuration
-  goname config list
+  goru config list
   
   # Initialize default configuration file
-  goname config init`,
+  goru config init`,
 }
 
 var configSetCmd = &cobra.Command{
@@ -97,7 +97,7 @@ var configInitCmd = &cobra.Command{
 			return
 		}
 
-		configFile := filepath.Join(home, ".goname.yaml")
+		configFile := filepath.Join(home, ".goru.yaml")
 
 		// Check if config file already exists
 		if _, err := os.Stat(configFile); err == nil {

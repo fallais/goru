@@ -14,8 +14,8 @@ var (
 // serverCmd represents the server command
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "Start the web server for the goname application",
-	Long: `Start a web server that provides a user interface for goname operations.
+	Short: "Start the web server for the goru application",
+	Long: `Start a web server that provides a user interface for goru operations.
 
 The web server provides:
 - A file browser for selecting directories to scan
@@ -25,13 +25,13 @@ The web server provides:
 
 Examples:
   # Start server on default port (8080)
-  goname server
+  goru server
   
   # Start server on specific port
-  goname server --port 3000
+  goru server --port 3000
   
   # Start server on specific host and port
-  goname server --host 0.0.0.0 --port 8080`,
+  goru server --host 0.0.0.0 --port 8080`,
 	Run: server.Run,
 }
 

@@ -26,13 +26,13 @@ to their original names. You can revert:
 
 Examples:
   # Revert the last rename operation
-  goname state revert --last
+  goru state revert --last
   
   # Revert a specific operation by ID
-  goname state revert --id abc123
+  goru state revert --id abc123
   
   # Revert all active operations (be careful!)
-  goname state revert --all`,
+  goru state revert --all`,
 	Run: revert.Run,
 }
 

@@ -5,8 +5,9 @@ import (
 	"strings"
 
 	"goru/internal/cmd/common"
-	"goru/internal/cmd/plan"
+	"goru/internal/models"
 	"goru/internal/services/files"
+	"goru/internal/services/formatters"
 	"goru/internal/services/plans"
 	"goru/internal/services/states"
 	"goru/pkg/log"
@@ -19,13 +20,29 @@ import (
 func Run(cmd *cobra.Command, args []string) {
 	log.Debug("goru is starting", zap.String("command", "apply"))
 
+	// Unmarshal configuration
+	var config models.Config
+	if err := viper.Unmarshal(&config); err != nil {
+		log.Fatal("failed to unmarshal config", zap.Error(err))
+	}
+	if err := config.Validate(); err != nil {
+		log.Fatal("invalid config", zap.Error(err))
+	}
+
 	// Create file service
 	fileService := files.NewFileService("", "", viper.GetStringSlice("filters"))
 
+	// Create the formatter service
+	formatterService := formatters.NewFormatterService("", "")
+
 	// Run plan before applying changes
-	// TOFIX : I need to return plan
-	plan.Run(cmd, args)
-	var plan plans.Plan
+	plan, err := common.RunPlan(fileService, formatterService, config)
+	if err != nil {
+		log.Fatal("failed to run plan", zap.Error(err))
+	}
+
+	// Display results
+	common.DisplayPlanResults(plan)
 
 	if !viper.GetBool("auto-approve") {
 		fmt.Println()

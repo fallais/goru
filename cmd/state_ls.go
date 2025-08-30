@@ -25,13 +25,13 @@ This command shows a history of all rename operations, including:
 
 Examples:
   # List all rename operations
-  goname state ls
+  goru state ls
   
   # List only active (non-reverted) operations
-  goname state ls --active
+  goru state ls --active
   
   # List only the last 10 operations
-  goname state ls --limit 10`,
+  goru state ls --limit 10`,
 	Run: ls.Run,
 }
 

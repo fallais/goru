@@ -43,7 +43,7 @@ func NewStateService() (*StateService, error) {
 		return nil, fmt.Errorf("failed to get home directory: %w", err)
 	}
 
-	statePath := filepath.Join(home, ".goname", "state.json")
+	statePath := filepath.Join(home, ".goru", "state.json")
 
 	// Create the directory if it doesn't exist
 	stateDir := filepath.Dir(statePath)

@@ -1,6 +1,6 @@
 # Template-Based Filename Generation
 
-This document explains how to use the template-based filename generation system in goname.
+This document explains how to use the template-based filename generation system in goru.
 
 ## Overview
 

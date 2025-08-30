@@ -1,10 +1,19 @@
 package common
 
 import (
+	"errors"
 	"fmt"
+	"goru/internal/models"
+	"goru/internal/services/files"
+	"goru/internal/services/formatters"
 	"goru/internal/services/plans"
+	"goru/internal/services/providers"
+	"goru/internal/services/providers/tmdb"
+	"goru/pkg/log"
 
 	"github.com/fatih/color"
+	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 var (
@@ -16,13 +25,105 @@ var (
 	Gray   = color.New(color.FgHiBlack)
 )
 
+var ErrNoFilesFound = errors.New("no video files found")
+
+func RunPlan(fileService *files.FileService, formatterService *formatters.FormatterService, config models.Config) (*plans.Plan, error) {
+	// Determine directories to scan (whether user is giving a single dir or multiple dirs with config file)
+	var directories []models.Directory
+	if viper.GetString("dir") != "" {
+		directories = append(directories, models.Directory{
+			Name:      "root",
+			Path:      viper.GetString("dir"),
+			Type:      viper.GetString("type"),
+			Provider:  viper.GetString("provider"),
+			Recursive: viper.GetBool("recursive"),
+		})
+	} else {
+		directories = config.Directories
+	}
+
+	// Scan each directory for video files
+	var videoFiles []*models.VideoFile
+	for _, dir := range directories {
+		if string(dir.ConflictStrategy) == "" {
+			dir.ConflictStrategy = models.DefaultConflictStrategy
+		}
+
+		fmt.Printf("Scanning directory: %s\n", dir.Path)
+		fmt.Printf("Conflict resolution strategy: %s\n", dir.ConflictStrategy)
+		currentFiles, err := fileService.ScanDirectory(dir.Path, dir.Recursive, dir.Type)
+		if err != nil {
+			log.Fatal("failed to scan directory", zap.Error(err))
+		}
+
+		if len(currentFiles) == 0 {
+			color.Yellow("No video files found in the specified directory.")
+			continue
+		}
+
+		// Initialize provider
+		var provider providers.Provider
+		switch viper.GetString("provider") {
+		case "tmdb":
+			tmdbProvider, err := tmdb.New(viper.GetString("providers.tmdb.api_key"))
+			if err != nil {
+				log.Fatal("failed to initialize TMDB service", zap.Error(err))
+			}
+
+			provider = tmdbProvider
+		case "tvdb":
+			log.Fatal("tvdb not implemented yet")
+		default:
+			log.Fatal("unsupported database type", zap.String("provider", viper.GetString("provider")))
+		}
+
+		for _, file := range currentFiles {
+			// Set the conflict strategy
+			file.ConflictStrategy = models.ConflictStrategy(dir.ConflictStrategy)
+
+			// Provider filename with metadata
+			log.Debug("providing metadata for file", zap.String("file", file.Filename))
+			err := provider.Provide(file)
+			if err != nil {
+				log.Error("failed to provide metadata", zap.Error(err))
+			}
+		}
+
+		videoFiles = append(videoFiles, currentFiles...)
+	}
+
+	if len(videoFiles) == 0 {
+		return nil, ErrNoFilesFound
+	}
+
+	fmt.Printf("Found %d video file(s)\n\n", len(videoFiles))
+
+	// Create the plan
+	plan, err := plans.NewPlan(videoFiles, formatterService)
+	if err != nil {
+		log.Fatal("failed to create plan", zap.Error(err))
+	}
+
+	// Resolve conflicts
+	// TODO: fix with new strategy !!!!!!!!!!!!!!!
+	if len(plan.Conflicts) > 0 {
+		log.Debug("conflicts detected", zap.Int("nb_conflicts", len(plan.Conflicts)))
+		err := plan.ResolveConflicts(models.ConflictStrategyAppendNumber)
+		if err != nil {
+			log.Fatal("failed to resolve conflicts", zap.Error(err))
+		}
+	}
+
+	return plan, nil
+}
+
 // DisplayPlanResults displays the results of a rename plan
 func DisplayPlanResults(plan *plans.Plan) {
 	alreadyCorrectCount := 0
 	needsRenameCount := 0
 	skippedCount := 0
 
-	fmt.Println("GoName will perform the following actions:")
+	fmt.Println("Goru will perform the following actions:")
 	fmt.Println()
 
 	for _, change := range plan.Changes {
@@ -87,6 +188,6 @@ func printPlanSummary(plan *plans.Plan, alreadyCorrectCount, needsRenameCount, e
 
 	if needsRenameCount > 0 {
 		fmt.Println()
-		Yellow.Println("To apply these changes, run: goname apply")
+		Yellow.Println("To apply these changes, run: goru apply")
 	}
 }

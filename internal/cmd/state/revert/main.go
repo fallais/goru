@@ -16,7 +16,7 @@ import (
 )
 
 func Run(cmd *cobra.Command, args []string) {
-	log.Debug("goname state revert is starting", zap.String("command", "state revert"))
+	log.Debug("goru state revert is starting", zap.String("command", "state revert"))
 
 	stateService, err := states.NewStateService()
 	if err != nil {

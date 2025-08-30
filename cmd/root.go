@@ -12,7 +12,7 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "goname",
+	Use:   "goru",
 	Short: "A tool that helps you rename your video files",
 	Long: `GoName is a CLI application that helps you rename video files by fetching
 information from TheMovieDB, TheTVDB, and other databases.
@@ -33,7 +33,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.goname.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.goru.yaml)")
 	rootCmd.PersistentFlags().String("dir", "d", "Directory to scan for video files")
 	rootCmd.PersistentFlags().BoolP("recursive", "r", false, "Scan directories recursively")
 	rootCmd.PersistentFlags().StringP("type", "t", "auto", "Media type: movie, tv, or auto")
@@ -67,10 +67,10 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".goname" (without extension).
+		// Search config in home directory with name ".goru" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigType("yaml")
-		viper.SetConfigName(".goname")
+		viper.SetConfigName(".goru")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

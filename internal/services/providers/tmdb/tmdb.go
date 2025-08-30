@@ -13,9 +13,13 @@ import (
 	tmdb "github.com/cyruzin/golang-tmdb"
 )
 
+// TMDB allows up to 50 requests per second
+const TMDBRateLimit = 50
+
 type tmdbProvider struct {
-	client *tmdb.Client
-	apiKey string
+	client      *tmdb.Client
+	apiKey      string
+	rateLimiter *providers.RateLimiter
 }
 
 // New creates a new TMDB service instance
@@ -29,13 +33,17 @@ func New(apiKey string) (providers.Provider, error) {
 		return nil, fmt.Errorf("failed to initialize TMDB client: %w", err)
 	}
 
-	return tmdbProvider{
-		client: client,
-		apiKey: apiKey,
+	// Create rate limiter for 50 requests per second (TMDB API limit)
+	rateLimiter := providers.NewRateLimiter(TMDBRateLimit)
+
+	return &tmdbProvider{
+		client:      client,
+		apiKey:      apiKey,
+		rateLimiter: rateLimiter,
 	}, nil
 }
 
-func (d tmdbProvider) Provide(file *models.VideoFile) error {
+func (d *tmdbProvider) Provide(file *models.VideoFile) error {
 	// Clean the filename for searching
 	cleanName := utils.CleanTitle(file.Filename)
 	year := providers.ExtractYear(file.Filename)
@@ -74,7 +82,7 @@ func (d tmdbProvider) Provide(file *models.VideoFile) error {
 }
 
 // SearchMovie searches for movies by title with improved matching
-func (d tmdbProvider) SearchMovie(title string, year int) (*models.Movie, error) {
+func (d *tmdbProvider) SearchMovie(title string, year int) (*models.Movie, error) {
 	// First try the exact title
 	movie, err := d.searchMovieWithQuery(title, year)
 	if err == nil {
@@ -99,7 +107,7 @@ func (d tmdbProvider) SearchMovie(title string, year int) (*models.Movie, error)
 }
 
 // SearchTVShow searches for TV shows by name with improved matching
-func (d tmdbProvider) SearchTVShow(name string, year int) (*models.TVShow, error) {
+func (d *tmdbProvider) SearchTVShow(name string, year int) (*models.TVShow, error) {
 	// First try the exact name
 	show, err := d.searchTVShowWithQuery(name, year)
 	if err == nil {
@@ -124,8 +132,8 @@ func (d tmdbProvider) SearchTVShow(name string, year int) (*models.TVShow, error
 }
 
 // GetEpisode gets episode information for a specific TV show
-func (d tmdbProvider) GetEpisode(tvShowID, seasonNumber, episodeNumber int) (*models.Episode, error) {
-	episode, err := d.client.GetTVEpisodeDetails(tvShowID, seasonNumber, episodeNumber, nil)
+func (d *tmdbProvider) GetEpisode(tvShowID, seasonNumber, episodeNumber int) (*models.Episode, error) {
+	episode, err := d.getTVEpisodeDetails(tvShowID, seasonNumber, episodeNumber, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get episode details: %w", err)
 	}
@@ -154,14 +162,14 @@ func (d tmdbProvider) GetEpisode(tvShowID, seasonNumber, episodeNumber int) (*mo
 // -------------------- Helper Functions -----------------------------
 
 // searchMovieWithQuery performs a single search query to TMDB
-func (d tmdbProvider) searchMovieWithQuery(title string, year int) (*models.Movie, error) {
+func (d *tmdbProvider) searchMovieWithQuery(title string, year int) (*models.Movie, error) {
 	options := map[string]string{}
 
 	if year > 0 {
 		options["year"] = strconv.Itoa(year)
 	}
 
-	results, err := d.client.GetSearchMovies(title, options)
+	results, err := d.getSearchMovies(title, options)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search movies: %w", err)
 	}
@@ -192,14 +200,14 @@ func (d tmdbProvider) searchMovieWithQuery(title string, year int) (*models.Movi
 }
 
 // searchTVShowWithQuery performs a single search query to TMDB
-func (d tmdbProvider) searchTVShowWithQuery(name string, year int) (*models.TVShow, error) {
+func (d *tmdbProvider) searchTVShowWithQuery(name string, year int) (*models.TVShow, error) {
 	options := map[string]string{}
 
 	if year > 0 {
 		options["first_air_date_year"] = strconv.Itoa(year)
 	}
 
-	results, err := d.client.GetSearchTVShow(name, options)
+	results, err := d.getSearchTVShow(name, options)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search TV shows: %w", err)
 	}
@@ -230,7 +238,7 @@ func (d tmdbProvider) searchTVShowWithQuery(name string, year int) (*models.TVSh
 }
 
 // getEpisodeInfo helper method to get episode information
-func (d tmdbProvider) getEpisodeInfo(show *models.TVShow, season, episode int) (*models.Episode, error) {
+func (d *tmdbProvider) getEpisodeInfo(show *models.TVShow, season, episode int) (*models.Episode, error) {
 	// Try to get episode from database service first
 	showID, err := strconv.Atoi(show.ExternalIDs.TMDBID)
 	if err != nil {
@@ -243,4 +251,22 @@ func (d tmdbProvider) getEpisodeInfo(show *models.TVShow, season, episode int) (
 	}
 
 	return episodeInfo, nil
+}
+
+// getSearchMovies performs a rate-limited movie search
+func (d *tmdbProvider) getSearchMovies(title string, options map[string]string) (*tmdb.SearchMovies, error) {
+	d.rateLimiter.Wait()
+	return d.client.GetSearchMovies(title, options)
+}
+
+// getSearchTVShow performs a rate-limited TV show search
+func (d *tmdbProvider) getSearchTVShow(name string, options map[string]string) (*tmdb.SearchTVShows, error) {
+	d.rateLimiter.Wait()
+	return d.client.GetSearchTVShow(name, options)
+}
+
+// getTVEpisodeDetails performs a rate-limited episode details lookup
+func (d *tmdbProvider) getTVEpisodeDetails(tvShowID, seasonNumber, episodeNumber int, options map[string]string) (*tmdb.TVEpisodeDetails, error) {
+	d.rateLimiter.Wait()
+	return d.client.GetTVEpisodeDetails(tvShowID, seasonNumber, episodeNumber, options)
 }

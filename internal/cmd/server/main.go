@@ -209,7 +209,7 @@ func (s *Server) handleLookup(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	health := map[string]string{
 		"status":  "ok",
-		"service": "goname-server",
+		"service": "goru-server",
 	}
 	s.writeJSON(w, health)
 }

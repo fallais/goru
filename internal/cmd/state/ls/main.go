@@ -14,7 +14,7 @@ import (
 )
 
 func Run(cmd *cobra.Command, args []string) {
-	log.Debug("goname state ls is starting", zap.String("command", "state ls"))
+	log.Debug("goru state ls is starting", zap.String("command", "state ls"))
 
 	stateService, err := states.NewStateService()
 	if err != nil {

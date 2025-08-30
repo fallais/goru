@@ -30,13 +30,13 @@ Perfect for quick checks or CI/CD pipelines.
 
 ```bash
 # Preview planned changes in the current directory
-goname plan --dir .
+goru plan --dir .
 
 # Apply changes automatically
-goname apply --dir . --auto-approve
+goru apply --dir . --auto-approve
 
 # Roll back changes if needed
-goname state revert --all
+goru state revert --all
 ```
 
 ### Handle multiple directories (aka providing a config file)
