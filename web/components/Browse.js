@@ -13,7 +13,6 @@ import {
   ListItemButton,
   Grid,
   CircularProgress,
-  Alert,
   Divider,
   Chip,
   FormControl,
@@ -22,7 +21,6 @@ import {
   MenuItem,
   FormControlLabel,
   Checkbox,
-  Collapse,
   IconButton,
   Breadcrumbs,
   Link,
@@ -44,8 +42,6 @@ import {
   Error,
   CheckCircle,
   Warning,
-  ExpandMore,
-  ExpandLess,
   Home,
   ArrowUpward,
   Refresh,
@@ -53,20 +49,23 @@ import {
   Info,
 } from '@mui/icons-material';
 import axios from 'axios';
+import { useApiCall } from '../hooks/useApiCall';
+import { useNotification } from '../contexts/NotificationContext';
 
 function Browse({ searchPath }) {
   const router = useRouter();
+  const apiCall = useApiCall();
+  const { showError } = useNotification();
   const [currentPath, setCurrentPath] = useState('');
   const [files, setFiles] = useState([]);
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [mediaType, setMediaType] = useState('auto');
   const [provider, setProvider] = useState('tmdb');
   const [recursive, setRecursive] = useState(true);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [hideNonVideoFiles, setHideNonVideoFiles] = useState(false);
 
   // Load current directory on component mount
   useEffect(() => {
@@ -84,39 +83,37 @@ function Browse({ searchPath }) {
 
   const loadCurrentDirectory = async () => {
     setLoading(true);
-    setError('');
     
-    try {
-      const response = await axios.get('/api/current');
-      console.log('Current directory API response:', response.data);
-      setCurrentPath(response.data.path);
-      setFiles(response.data.files || []);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to load current directory');
-    } finally {
-      setLoading(false);
+    const result = await apiCall.get('/api/current', {
+      errorPrefix: 'Failed to load current directory'
+    });
+    
+    if (result.success) {
+      console.log('Current directory API response:', result.data.data);
+      setCurrentPath(result.data.data.path);
+      setFiles(result.data.data.files || []);
     }
+    
+    setLoading(false);
   };
 
   const loadDirectory = async (path) => {
     setLoading(true);
-    setError('');
     setFiles([]);
     setPlan(null); // Clear previous plan when navigating
 
-    try {
-      const response = await axios.get('/api/directory', {
-        params: { path: path }
-      });
+    const result = await apiCall.get('/api/directory', {
+      params: { path: path },
+      errorPrefix: 'Failed to load directory'
+    });
 
-      console.log('Directory API response:', response.data);
-      setCurrentPath(response.data.path);
-      setFiles(response.data.files || []);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to load directory');
-    } finally {
-      setLoading(false);
+    if (result.success) {
+      console.log('Directory API response:', result.data.data);
+      setCurrentPath(result.data.data.path);
+      setFiles(result.data.data.files || []);
     }
+    
+    setLoading(false);
   };
 
   const handleDirectoryClick = (dirPath) => {
@@ -134,29 +131,54 @@ function Browse({ searchPath }) {
 
   const handleLookup = async () => {
     if (!currentPath.trim()) {
-      setError('No directory loaded');
+      showError('No directory loaded');
       return;
     }
 
     setLoading(true);
-    setError('');
     setPlan(null);
 
-    try {
-      const response = await axios.post('/api/lookup', {
-        directory: currentPath,
-        type: mediaType,
-        provider: provider,
-        recursive: recursive,
-      });
+    const result = await apiCall.post('/api/lookup', {
+      directory: currentPath,
+      type: mediaType,
+      provider: provider,
+      recursive: recursive,
+    }, {
+      errorPrefix: 'Failed to lookup media information'
+    });
 
-      console.log('Lookup API response:', response.data);
-      setPlan(response.data.plan);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to lookup media information');
-    } finally {
-      setLoading(false);
+    if (result.success) {
+      console.log('Lookup API response:', result.data.data);
+      setPlan(result.data.data.plan);
     }
+    
+    setLoading(false);
+  };
+
+  const handleApply = async () => {
+    if (!plan || !plan.changes || plan.changes.length === 0) {
+      showError('No plan to apply');
+      return;
+    }
+
+    setLoading(true);
+
+    const result = await apiCall.post('/api/apply', {
+      plan: plan,
+    }, {
+      errorPrefix: 'Failed to apply changes',
+      successMessage: 'Changes applied successfully!',
+      showSuccessNotification: true
+    });
+
+    if (result.success) {
+      console.log('Apply API response:', result.data.data);
+      // Refresh the directory to show the updated file names
+      await loadDirectory(currentPath);
+      setPlan(null); // Clear the plan after successful application
+    }
+    
+    setLoading(false);
   };
 
   // Map action numbers to labels and chip colors
@@ -443,48 +465,14 @@ function Browse({ searchPath }) {
 
     return (
       <Paper sx={{ p: 2, mt: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6">
-            Directory Contents
-          </Typography>
-          <Button
-            variant="contained"
-            sx={{ 
-              backgroundColor: '#ff8c00', 
-              '&:hover': { backgroundColor: '#ff7c00' },
-              fontWeight: 'bold'
-            }}
-            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <PlayArrow />}
-            onClick={handleLookup}
-            disabled={loading}
-          >
-            Lookup
-          </Button>
-        </Box>
+        <Typography variant="h6" gutterBottom>
+          Directory Contents
+        </Typography>
         
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Found {videoFiles.length} video file(s), {directories.length} folder(s), and {otherFiles.length} other file(s)
+          Found {videoFiles.length} video file(s), {directories.length} folder(s){!hideNonVideoFiles && `, and ${otherFiles.length} other file(s)`}
         </Typography>
 
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-          <Button
-            size="small"
-            startIcon={<ArrowUpward />}
-            onClick={handleParentDirectory}
-            disabled={loading || !currentPath}
-          >
-            Parent
-          </Button>
-          <Button
-            size="small"
-            startIcon={<Refresh />}
-            onClick={() => loadDirectory(currentPath)}
-            disabled={loading || !currentPath}
-          >
-            Refresh
-          </Button>
-        </Box>
-        
         <List dense>
           {/* Directories first */}
           {directories.map((file, index) => (
@@ -553,7 +541,7 @@ function Browse({ searchPath }) {
           })}
 
           {/* Other files (limited display) */}
-          {otherFiles.slice(0, 10).map((file, index) => {
+          {!hideNonVideoFiles && otherFiles.slice(0, 10).map((file, index) => {
             const fileSizeMB = file.size && file.size > 0 ? (file.size / (1024 * 1024)).toFixed(2) : '0.00';
             
             return (
@@ -575,7 +563,7 @@ function Browse({ searchPath }) {
             );
           })}
           
-          {otherFiles.length > 10 && (
+          {!hideNonVideoFiles && otherFiles.length > 10 && (
             <ListItem>
               <ListItemText secondary={`... and ${otherFiles.length - 10} more files`} />
             </ListItem>
@@ -585,123 +573,121 @@ function Browse({ searchPath }) {
     );
   };
 
-  const renderPlan = () => {
-    if (!plan) return null;
-
-    // Only show errors and summary statistics here since changes are now inline
+  const renderSidebar = () => {
     return (
-      <Paper sx={{ p: 2, mt: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Plan Summary
-        </Typography>
-        
-        {plan.errors && plan.errors.length > 0 && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            <Typography variant="subtitle2">Errors:</Typography>
-            {plan.errors.map((error, index) => (
-              <Typography key={index} variant="body2">
-                {error.file}: {error.message}
-              </Typography>
-            ))}
-          </Alert>
-        )}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {/* Options Panel */}
+        <Paper sx={{ p: 2, height: 'fit-content', position: 'sticky', top: 16 }}>
+          <Typography variant="h6" gutterBottom>
+            Options
+          </Typography>
+          
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={hideNonVideoFiles}
+                  onChange={(e) => setHideNonVideoFiles(e.target.checked)}
+                />
+              }
+              label="Hide non-video files"
+            />
+            
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={recursive}
+                  onChange={(e) => setRecursive(e.target.checked)}
+                  disabled={loading}
+                />
+              }
+              label="Recursive scan"
+            />
+          </Box>
+        </Paper>
 
-        {plan.changes && plan.changes.length > 0 ? (
-          <Typography variant="body2" color="text.secondary">
-            {plan.changes.filter(c => c.action === '~').length} files to rename, {' '}
-            {plan.changes.filter(c => c.action === '✓').length} already correct, {' '}
-            {plan.changes.filter(c => c.action === '✗').length} to skip
-            {plan.changes.some(c => c.conflict_ids && c.conflict_ids.length > 0) && (
-              <span style={{ color: 'red' }}> • Conflicts detected!</span>
-            )}
+        {/* Lookup Panel */}
+        <Paper sx={{ p: 2, height: 'fit-content' }}>
+          <Typography variant="h6" gutterBottom>
+            Lookup
           </Typography>
-        ) : (
-          <Typography variant="body2" color="text.secondary">
-            No changes needed - all files are already properly named or no video files found.
-          </Typography>
-        )}
-      </Paper>
+          
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <FormControl size="small" fullWidth>
+              <InputLabel>Type</InputLabel>
+              <Select
+                value={mediaType}
+                label="Type"
+                onChange={(e) => setMediaType(e.target.value)}
+                disabled={loading}
+              >
+                <MenuItem value="auto">Auto</MenuItem>
+                <MenuItem value="movie">Movie</MenuItem>
+                <MenuItem value="tv">TV</MenuItem>
+              </Select>
+            </FormControl>
+            
+            <FormControl size="small" fullWidth>
+              <InputLabel>Provider</InputLabel>
+              <Select
+                value={provider}
+                label="Provider"
+                onChange={(e) => setProvider(e.target.value)}
+                disabled={loading}
+              >
+                <MenuItem value="tmdb">TMDB</MenuItem>
+              </Select>
+            </FormControl>
+            
+            <Button
+              variant="contained"
+              sx={{ 
+                backgroundColor: '#4caf50', 
+                '&:hover': { backgroundColor: '#45a049' },
+                fontWeight: 'bold'
+              }}
+              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <PlayArrow />}
+              onClick={handleLookup}
+              disabled={loading}
+            >
+              Lookup
+            </Button>
+            
+            <Button
+              variant="contained"
+              sx={{ 
+                backgroundColor: plan && plan.changes && plan.changes.length > 0 ? '#ff8c00' : 'grey.400',
+                '&:hover': { 
+                  backgroundColor: plan && plan.changes && plan.changes.length > 0 ? '#ff7c00' : 'grey.400' 
+                },
+                fontWeight: 'bold'
+              }}
+              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <PlayArrow />}
+              onClick={handleApply}
+              disabled={loading || !plan || !plan.changes || plan.changes.length === 0}
+            >
+              Apply
+            </Button>
+          </Box>
+        </Paper>
+      </Box>
     );
   };
 
   return (
-    <Box>
-      {renderBreadcrumbs()}
+    <Box sx={{ display: 'flex', gap: 2 }}>
+      {/* Left Sidebar */}
+      <Box sx={{ width: 250, flexShrink: 0 }}>
+        {renderSidebar()}
+      </Box>
 
-      {/* Advanced options - minimized by default */}
-      <Paper sx={{ p: 2, mt: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: showAdvanced ? 2 : 0 }}>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Options
-          </Typography>
-          <IconButton
-            size="small"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            aria-label="toggle advanced options"
-          >
-            {showAdvanced ? <ExpandLess /> : <ExpandMore />}
-          </IconButton>
-        </Box>
-        
-        <Collapse in={showAdvanced}>
-          <Box sx={{ mb: 2 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={3}>
-                <FormControl fullWidth>
-                  <InputLabel>Media Type</InputLabel>
-                  <Select
-                    value={mediaType}
-                    label="Media Type"
-                    onChange={(e) => setMediaType(e.target.value)}
-                    disabled={loading}
-                  >
-                    <MenuItem value="auto">Auto Detect</MenuItem>
-                    <MenuItem value="movie">Movie</MenuItem>
-                    <MenuItem value="tv">TV Show</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
+      {/* Main Content */}
+      <Box sx={{ flexGrow: 1 }}>
+        {renderBreadcrumbs()}
 
-              <Grid item xs={12} sm={6} md={3}>
-                <FormControl fullWidth>
-                  <InputLabel>Provider</InputLabel>
-                  <Select
-                    value={provider}
-                    label="Provider"
-                    onChange={(e) => setProvider(e.target.value)}
-                    disabled={loading}
-                  >
-                    <MenuItem value="tmdb">TMDB</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={3}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={recursive}
-                      onChange={(e) => setRecursive(e.target.checked)}
-                      disabled={loading}
-                    />
-                  }
-                  label="Recursive Scan"
-                />
-              </Grid>
-            </Grid>
-          </Box>
-        </Collapse>
-
-        {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {error}
-          </Alert>
-        )}
-      </Paper>
-
-      {renderFileList()}
-      {renderPlan()}
-      {renderFileInfoModal()}
+        {renderFileList()}
+        {renderFileInfoModal()}
+      </Box>
     </Box>
   );
 }
