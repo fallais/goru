@@ -41,6 +41,7 @@ func RunPlan(fileService *files.FileService, formatterService *formatters.Format
 			Type:      viper.GetString("type"),
 			Provider:  viper.GetString("provider"),
 			Recursive: viper.GetBool("recursive"),
+			Format:    viper.GetString("format"),
 		})
 	} else {
 		directories = config.Directories

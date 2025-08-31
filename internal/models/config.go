@@ -21,6 +21,7 @@ type Directory struct {
 	Provider         string           `yaml:"provider" mapstructure:"provider"`
 	Recursive        bool             `yaml:"recursive" mapstructure:"recursive"`
 	ConflictStrategy ConflictStrategy `yaml:"conflict_strategy" mapstructure:"conflict_strategy"`
+	Format           string           `yaml:"format" mapstructure:"format"`
 }
 
 func (c Config) Validate() error {

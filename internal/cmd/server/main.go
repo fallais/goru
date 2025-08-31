@@ -93,6 +93,7 @@ func Run(cmd *cobra.Command, args []string) {
 	// API routes
 	api := router.PathPrefix("/api").Subrouter()
 	api.HandleFunc("/directory", server.handleDirectory).Methods("GET")
+	api.HandleFunc("/current", server.handleCurrentDirectory).Methods("GET")
 	api.HandleFunc("/lookup", server.handleLookup).Methods("POST")
 	api.HandleFunc("/health", server.handleHealth).Methods("GET")
 
@@ -156,6 +157,46 @@ func (s *Server) handleDirectory(w http.ResponseWriter, r *http.Request) {
 	response := DirectoryResponse{
 		Files: files,
 		Path:  directory,
+	}
+
+	s.writeJSON(w, response)
+}
+
+// handleCurrentDirectory handles current directory request
+func (s *Server) handleCurrentDirectory(w http.ResponseWriter, r *http.Request) {
+	// Get current working directory
+	cwd, err := os.Getwd()
+	if err != nil {
+		s.writeError(w, fmt.Sprintf("failed to get current directory: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Read directory contents
+	entries, err := os.ReadDir(cwd)
+	if err != nil {
+		s.writeError(w, fmt.Sprintf("failed to read current directory: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	var files []FileInfo
+	for _, entry := range entries {
+		info, err := entry.Info()
+		if err != nil {
+			continue
+		}
+
+		files = append(files, FileInfo{
+			Name:    entry.Name(),
+			Path:    filepath.Join(cwd, entry.Name()),
+			IsDir:   entry.IsDir(),
+			Size:    info.Size(),
+			ModTime: info.ModTime().Format("2006-01-02 15:04:05"),
+		})
+	}
+
+	response := DirectoryResponse{
+		Files: files,
+		Path:  cwd,
 	}
 
 	s.writeJSON(w, response)

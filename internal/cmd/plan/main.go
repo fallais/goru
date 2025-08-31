@@ -30,7 +30,7 @@ func Run(cmd *cobra.Command, args []string) {
 	fileService := files.NewFileService("", "", viper.GetStringSlice("filters"))
 
 	// Create the formatter service
-	formatterService := formatters.NewFormatterService("", "")
+	formatterService := formatters.NewFormatterService(viper.GetString("format"), viper.GetString("format"))
 
 	// Create the subtitles provider
 	subtitleProvider := opensubtitles.New(viper.GetString("providers.opensubtitles.api_key"))

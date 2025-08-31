@@ -39,6 +39,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("type", "t", "auto", "Media type: movie, tv, or auto")
 	rootCmd.PersistentFlags().String("provider", "tmdb", "Database provider: tmdb, tvdb or anidb")
 	rootCmd.PersistentFlags().String("conflict", "append", "Conflict resolution strategy: skip, append, timestamp, prompt, overwrite, backup")
+	rootCmd.PersistentFlags().String("format", "plex", "Format for the output files")
 	rootCmd.PersistentFlags().Bool("subtitles", false, "Enable subtitles download")
 	rootCmd.PersistentFlags().Int("parallelism", 10, "Maximum number of concurrent file processing operations")
 
@@ -50,6 +51,7 @@ func init() {
 	viper.BindPFlag("conflict", rootCmd.PersistentFlags().Lookup("conflict"))
 	viper.BindPFlag("subtitles", rootCmd.PersistentFlags().Lookup("subtitles"))
 	viper.BindPFlag("parallelism", rootCmd.PersistentFlags().Lookup("parallelism"))
+	viper.BindPFlag("format", rootCmd.PersistentFlags().Lookup("format"))
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 
 	// Env
@@ -61,6 +63,7 @@ func init() {
 	viper.SetDefault("type", "auto")
 	viper.SetDefault("provider", "tmdb")
 	viper.SetDefault("parallelism", 10)
+	viper.SetDefault("format", "plex")
 }
 
 // initConfig reads in config file and ENV variables if set.
