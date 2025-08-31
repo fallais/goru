@@ -8,8 +8,6 @@ import {
   ThemeProvider,
   createTheme,
   Button,
-  Menu,
-  MenuItem,
   TextField,
   Box,
   InputAdornment,
@@ -18,7 +16,6 @@ import {
   Search,
   Settings as SettingsIcon,
   FolderOpen,
-  KeyboardArrowDown,
 } from '@mui/icons-material';
 import { CacheProvider } from '@emotion/react';
 import createEmotionCache from '../lib/createEmotionCache';
@@ -42,20 +39,10 @@ const clientSideEmotionCache = createEmotionCache();
 export default function MyApp(props) {
   const { Component, emotionCache = clientSideEmotionCache, pageProps } = props;
   const router = useRouter();
-  const [anchorEl, setAnchorEl] = useState(null);
   const [searchPath, setSearchPath] = useState('');
-
-  const handleMenuClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
 
   const handleNavigate = (path) => {
     router.push(path);
-    handleMenuClose();
   };
 
   const handleSearchKeyPress = (e) => {
@@ -81,26 +68,20 @@ export default function MyApp(props) {
               <Button
                 color="inherit"
                 startIcon={<FolderOpen />}
-                endIcon={<KeyboardArrowDown />}
-                onClick={handleMenuClick}
+                onClick={() => handleNavigate('/')}
                 sx={{ mr: 2 }}
               >
                 Browse
               </Button>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
+              
+              <Button
+                color="inherit"
+                startIcon={<SettingsIcon />}
+                onClick={() => handleNavigate('/settings')}
+                sx={{ mr: 2 }}
               >
-                <MenuItem onClick={() => handleNavigate('/')}>
-                  <FolderOpen sx={{ mr: 1 }} />
-                  Browse Files
-                </MenuItem>
-                <MenuItem onClick={() => handleNavigate('/settings')}>
-                  <SettingsIcon sx={{ mr: 1 }} />
-                  Settings
-                </MenuItem>
-              </Menu>
+                Settings
+              </Button>
               
               {/* Search Bar */}
               <Box sx={{ flexGrow: 1, mx: 2 }}>
