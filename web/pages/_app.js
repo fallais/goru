@@ -136,7 +136,7 @@ export default function MyApp(props) {
               </Box>
             </Toolbar>
           </AppBar>
-          <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+          <Container maxWidth={false} sx={{ mt: 4, mb: 4 }}>
             <Component {...pageProps} searchPath={searchPath} />
           </Container>
           <NotificationSnackbar />

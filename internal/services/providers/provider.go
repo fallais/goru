@@ -1,15 +1,21 @@
 package providers
 
 import (
+	"errors"
 	"goru/internal/models"
 	"strconv"
 	"strings"
 )
 
 type Provider interface {
-	SearchMovie(title string, year int) (*models.Movie, error)
-	SearchTVShow(title string, year int) (*models.TVShow, error)
+	GetMovie(title string, year int) (*models.Movie, error)
+	SearchMovies(title string, year int) ([]*models.Movie, error)
+
+	GetTVShow(title string, year int) (*models.TVShow, error)
+	SearchTVShows(title string, year int) ([]*models.TVShow, error)
+
 	GetEpisode(showID, season, episode int) (*models.Episode, error)
+	ListEpisodes(showID, season int) ([]*models.Episode, error)
 
 	// Provide video file with metadata information coming from the Internet
 	Provide(file *models.VideoFile) error
@@ -29,3 +35,6 @@ func ExtractYear(filename string) int {
 	}
 	return 0
 }
+
+var ErrNoMoviesFound = errors.New("no movies found")
+var ErrNoTVShowsFound = errors.New("no TV shows found")

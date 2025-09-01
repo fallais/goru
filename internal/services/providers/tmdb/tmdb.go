@@ -3,7 +3,6 @@ package tmdb
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"goru/internal/models"
@@ -51,7 +50,7 @@ func (d *tmdbProvider) Provide(file *models.VideoFile) error {
 	switch file.MediaType {
 	case models.MediaTypeMovie:
 		// Fetch movie metadata from TMDB
-		movie, err := d.SearchMovie(cleanName, year)
+		movie, err := d.SearchMovies(cleanName, year)
 		if err != nil {
 			return fmt.Errorf("failed to fetch movie metadata: %w", err)
 		}
@@ -63,7 +62,7 @@ func (d *tmdbProvider) Provide(file *models.VideoFile) error {
 			return fmt.Errorf("could not extract season/episode from filename: %s", file.Filename)
 		}
 
-		show, err := d.SearchTVShow(cleanName, year)
+		show, err := d.GetTVShow(cleanName, year)
 		if err != nil {
 			return fmt.Errorf("failed to search TV show: %w", err)
 		}
@@ -82,15 +81,48 @@ func (d *tmdbProvider) Provide(file *models.VideoFile) error {
 }
 
 // SearchMovie searches for movies by title with improved matching
-func (d *tmdbProvider) SearchMovie(title string, year int) (*models.Movie, error) {
-	// First try the exact title
-	movie, err := d.searchMovieWithQuery(title, year)
-	if err == nil {
-		return movie, nil
+func (d *tmdbProvider) GetMovie(title string, year int) (*models.Movie, error) {
+	movies, err := d.SearchMovies(title, year)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search movies: %w", err)
+	}
+	if len(movies) == 0 {
+		return nil, providers.ErrNoMoviesFound
+	}
+	return movies[0], nil
+}
+
+// SearchMovie searches for movies by title with improved matching
+func (d *tmdbProvider) SearchMovies(title string, year int) ([]*models.Movie, error) {
+	d.rateLimiter.Wait()
+
+	options := map[string]string{}
+	if year > 0 {
+		options["year"] = strconv.Itoa(year)
 	}
 
+	resp, err := d.client.GetSearchMovies(title, options)
+	if err != nil {
+		return nil, fmt.Errorf("TMDB movie search failed: %w", err)
+	}
+	if len(resp.Results) == 0 {
+		return nil, providers.ErrNoMoviesFound
+	}
+
+	var movies []*models.Movie
+	for _, tmdbMovie := range resp.Results {
+		movie, err := tmdbMovieToModel(tmdbMovie)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert TMDB movie to model: %w", err)
+		}
+
+		movies = append(movies, movie)
+	}
+
+	return movies, nil
+
 	// If no results, try searching with individual words
-	words := strings.Fields(title)
+	/* words := strings.Fields(title)
 	if len(words) > 1 {
 		// Try different combinations of words, starting with longer combinations
 		for i := len(words); i >= 1; i-- {
@@ -101,39 +133,57 @@ func (d *tmdbProvider) SearchMovie(title string, year int) (*models.Movie, error
 				}
 			}
 		}
-	}
+	} */
 
-	return nil, fmt.Errorf("no movies found for title: %s (tried various word combinations)", title)
+}
+
+func (d *tmdbProvider) GetTVShow(name string, year int) (*models.TVShow, error) {
+	tvShows, err := d.SearchTVShows(name, year)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search TV shows: %w", err)
+	}
+	if len(tvShows) == 0 {
+		return nil, providers.ErrNoTVShowsFound
+	}
+	return tvShows[0], nil
 }
 
 // SearchTVShow searches for TV shows by name with improved matching
-func (d *tmdbProvider) SearchTVShow(name string, year int) (*models.TVShow, error) {
+func (d *tmdbProvider) SearchTVShows(name string, year int) ([]*models.TVShow, error) {
+	d.rateLimiter.Wait()
+
+	options := map[string]string{}
+	if year > 0 {
+		options["first_air_date_year"] = strconv.Itoa(year)
+	}
+
 	// First try the exact name
-	show, err := d.searchTVShowWithQuery(name, year)
-	if err == nil {
-		return show, nil
+	resp, err := d.client.GetSearchTVShow(name, options)
+	if err != nil {
+		return nil, fmt.Errorf("TMDB TV show search failed: %w", err)
+	}
+	if len(resp.Results) == 0 {
+		return nil, providers.ErrNoTVShowsFound
 	}
 
-	// If no results, try searching with individual words
-	words := strings.Fields(name)
-	if len(words) > 1 {
-		// Try different combinations of words, starting with longer combinations
-		for i := len(words); i >= 1; i-- {
-			for j := 0; j <= len(words)-i; j++ {
-				query := strings.Join(words[j:j+i], " ")
-				if show, err := d.searchTVShowWithQuery(query, year); err == nil {
-					return show, nil
-				}
-			}
+	var tvshows []*models.TVShow
+	for _, tmdbShow := range resp.Results {
+		show, err := tmdbShowToModel(tmdbShow)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert TMDB TV show to model: %w", err)
 		}
+
+		tvshows = append(tvshows, show)
 	}
 
-	return nil, fmt.Errorf("no TV shows found for name: %s (tried various word combinations)", name)
+	return tvshows, nil
 }
 
 // GetEpisode gets episode information for a specific TV show
 func (d *tmdbProvider) GetEpisode(tvShowID, seasonNumber, episodeNumber int) (*models.Episode, error) {
-	episode, err := d.getTVEpisodeDetails(tvShowID, seasonNumber, episodeNumber, nil)
+	d.rateLimiter.Wait()
+
+	episode, err := d.client.GetTVEpisodeDetails(tvShowID, seasonNumber, episodeNumber, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get episode details: %w", err)
 	}
@@ -159,83 +209,41 @@ func (d *tmdbProvider) GetEpisode(tvShowID, seasonNumber, episodeNumber int) (*m
 	}, nil
 }
 
+// GetEpisode gets episode information for a specific TV show
+func (d *tmdbProvider) ListEpisodes(tvShowID, seasonNumber int) ([]*models.Episode, error) {
+	d.rateLimiter.Wait()
+
+	resp, err := d.client.GetTVSeasonDetails(tvShowID, seasonNumber, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get episode details: %w", err)
+	}
+
+	var episodes []*models.Episode
+	for _, episode := range resp.Episodes {
+		var airDate time.Time
+		if episode.AirDate != "" {
+			if date, err := time.Parse("2006-01-02", episode.AirDate); err == nil {
+				airDate = date
+			}
+		}
+
+		episodes = append(episodes, &models.Episode{
+			Title:     episode.Name,
+			Season:    episode.SeasonNumber,
+			Episode:   episode.EpisodeNumber,
+			AirDate:   airDate,
+			Summary:   episode.Overview,
+			Thumbnail: episode.StillPath,
+			ExternalIDs: models.ExternalIDs{
+				TMDBID: strconv.FormatInt(episode.ID, 10),
+			},
+		})
+	}
+
+	return episodes, nil
+}
+
 // -------------------- Helper Functions -----------------------------
-
-// searchMovieWithQuery performs a single search query to TMDB
-func (d *tmdbProvider) searchMovieWithQuery(title string, year int) (*models.Movie, error) {
-	options := map[string]string{}
-
-	if year > 0 {
-		options["year"] = strconv.Itoa(year)
-	}
-
-	results, err := d.getSearchMovies(title, options)
-	if err != nil {
-		return nil, fmt.Errorf("failed to search movies: %w", err)
-	}
-
-	if len(results.Results) == 0 {
-		return nil, fmt.Errorf("no movies found for title: %s", title)
-	}
-
-	// Take the first result (most relevant)
-	movie := results.Results[0]
-
-	movieInfo := &models.Movie{
-		Title:         movie.Title,
-		OriginalTitle: movie.OriginalTitle,
-		ExternalIDs: models.ExternalIDs{
-			TMDBID: strconv.FormatInt(movie.ID, 10),
-		},
-	}
-
-	// Extract year from release date
-	if movie.ReleaseDate != "" {
-		if date, err := time.Parse("2006-01-02", movie.ReleaseDate); err == nil {
-			movieInfo.ReleaseDate = date
-		}
-	}
-
-	return movieInfo, nil
-}
-
-// searchTVShowWithQuery performs a single search query to TMDB
-func (d *tmdbProvider) searchTVShowWithQuery(name string, year int) (*models.TVShow, error) {
-	options := map[string]string{}
-
-	if year > 0 {
-		options["first_air_date_year"] = strconv.Itoa(year)
-	}
-
-	results, err := d.getSearchTVShow(name, options)
-	if err != nil {
-		return nil, fmt.Errorf("failed to search TV shows: %w", err)
-	}
-
-	if len(results.Results) == 0 {
-		return nil, fmt.Errorf("no TV shows found for name: %s", name)
-	}
-
-	// Take the first result (most relevant)
-	show := results.Results[0]
-
-	showInfo := &models.TVShow{
-		Name:         show.Name,
-		OriginalName: show.OriginalName,
-		ExternalIDs: models.ExternalIDs{
-			TMDBID: strconv.FormatInt(show.ID, 10),
-		},
-	}
-
-	// Extract year from first air date
-	if show.FirstAirDate != "" {
-		if date, err := time.Parse("2006-01-02", show.FirstAirDate); err == nil {
-			showInfo.FirstAirDate = date
-		}
-	}
-
-	return showInfo, nil
-}
 
 // getEpisodeInfo helper method to get episode information
 func (d *tmdbProvider) getEpisodeInfo(show *models.TVShow, season, episode int) (*models.Episode, error) {
@@ -251,22 +259,4 @@ func (d *tmdbProvider) getEpisodeInfo(show *models.TVShow, season, episode int) 
 	}
 
 	return episodeInfo, nil
-}
-
-// getSearchMovies performs a rate-limited movie search
-func (d *tmdbProvider) getSearchMovies(title string, options map[string]string) (*tmdb.SearchMovies, error) {
-	d.rateLimiter.Wait()
-	return d.client.GetSearchMovies(title, options)
-}
-
-// getSearchTVShow performs a rate-limited TV show search
-func (d *tmdbProvider) getSearchTVShow(name string, options map[string]string) (*tmdb.SearchTVShows, error) {
-	d.rateLimiter.Wait()
-	return d.client.GetSearchTVShow(name, options)
-}
-
-// getTVEpisodeDetails performs a rate-limited episode details lookup
-func (d *tmdbProvider) getTVEpisodeDetails(tvShowID, seasonNumber, episodeNumber int, options map[string]string) (*tmdb.TVEpisodeDetails, error) {
-	d.rateLimiter.Wait()
-	return d.client.GetTVEpisodeDetails(tvShowID, seasonNumber, episodeNumber, options)
 }

@@ -447,9 +447,25 @@ function Browse({ searchPath }) {
     if (files.length === 0) {
       return (
         <Paper sx={{ p: 2, mt: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            Directory Contents
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">
+              Directory Contents
+            </Typography>
+            <Button
+              variant="contained"
+              size="small"
+              sx={{ 
+                backgroundColor: '#4caf50', 
+                '&:hover': { backgroundColor: '#45a049' },
+                fontWeight: 'bold'
+              }}
+              startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <Edit />}
+              onClick={handleEditLookup}
+              disabled={loading || !currentPath.trim()}
+            >
+              Lookup
+            </Button>
+          </Box>
           <Typography variant="body2" color="text.secondary">
             {loading ? 'Loading directory contents...' : 'No files found in this directory.'}
           </Typography>
@@ -487,9 +503,25 @@ function Browse({ searchPath }) {
 
     return (
       <Paper sx={{ p: 2, mt: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Directory Contents
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h6">
+            Directory Contents
+          </Typography>
+          <Button
+            variant="contained"
+            size="small"
+            sx={{ 
+              backgroundColor: '#4caf50', 
+              '&:hover': { backgroundColor: '#45a049' },
+              fontWeight: 'bold'
+            }}
+            startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <Edit />}
+            onClick={handleEditLookup}
+            disabled={loading || !currentPath.trim()}
+          >
+            Lookup
+          </Button>
+        </Box>
         
         <Typography variant="body2" color="text.secondary" gutterBottom>
           Found {videoFiles.length} video file(s), {directories.length} folder(s){!hideNonVideoFiles && `, and ${otherFiles.length} other file(s)`}
@@ -625,89 +657,6 @@ function Browse({ searchPath }) {
               }
               label="Recursive scan"
             />
-          </Box>
-        </Paper>
-
-        {/* Lookup Panel */}
-        <Paper sx={{ p: 2, height: 'fit-content' }}>
-          <Typography variant="h6" gutterBottom>
-            Lookup
-          </Typography>
-          
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <FormControl size="small" fullWidth>
-              <InputLabel>Type</InputLabel>
-              <Select
-                value={mediaType}
-                label="Type"
-                onChange={(e) => setMediaType(e.target.value)}
-                disabled={loading}
-              >
-                <MenuItem value="auto">Auto</MenuItem>
-                <MenuItem value="movie">Movie</MenuItem>
-                <MenuItem value="tv">TV</MenuItem>
-              </Select>
-            </FormControl>
-            
-            <FormControl size="small" fullWidth>
-              <InputLabel>Provider</InputLabel>
-              <Select
-                value={provider}
-                label="Provider"
-                onChange={(e) => setProvider(e.target.value)}
-                disabled={loading}
-              >
-                <MenuItem value="tmdb">TMDB</MenuItem>
-              </Select>
-            </FormControl>
-            
-            <Button
-              variant="contained"
-              sx={{ 
-                backgroundColor: '#4caf50', 
-                '&:hover': { backgroundColor: '#45a049' },
-                fontWeight: 'bold'
-              }}
-              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <PlayArrow />}
-              onClick={handleLookup}
-              disabled={loading}
-            >
-              Lookup
-            </Button>
-
-            <Button
-              variant="outlined"
-              sx={{ 
-                borderColor: '#2196f3',
-                color: '#2196f3',
-                '&:hover': { 
-                  borderColor: '#1976d2',
-                  backgroundColor: 'rgba(33, 150, 243, 0.04)'
-                },
-                fontWeight: 'bold'
-              }}
-              startIcon={<Edit />}
-              onClick={handleEditLookup}
-              disabled={loading || !currentPath.trim()}
-            >
-              Edit Lookup
-            </Button>
-            
-            <Button
-              variant="contained"
-              sx={{ 
-                backgroundColor: plan && plan.changes && plan.changes.length > 0 ? '#ff8c00' : 'grey.400',
-                '&:hover': { 
-                  backgroundColor: plan && plan.changes && plan.changes.length > 0 ? '#ff7c00' : 'grey.400' 
-                },
-                fontWeight: 'bold'
-              }}
-              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <PlayArrow />}
-              onClick={handleApply}
-              disabled={loading || !plan || !plan.changes || plan.changes.length === 0}
-            >
-              Apply
-            </Button>
           </Box>
         </Paper>
       </Box>

@@ -10,6 +10,7 @@ import (
 	"goru/internal/models"
 	"goru/internal/services/files"
 	"goru/internal/services/formatters"
+	"goru/internal/services/providers/tmdb"
 	"goru/pkg/log"
 
 	"github.com/gorilla/mux"
@@ -34,9 +35,17 @@ func Run(cmd *cobra.Command, args []string) {
 	fileService := files.NewFileService("", "", viper.GetStringSlice("filters"))
 	formatterService := formatters.NewFormatterService("", "")
 
+	// Create provider
+	tmdbProvider, err := tmdb.New(viper.GetString("providers.tmdb.api_key"))
+	if err != nil {
+		log.Fatal("failed to create TMDB provider", zap.Error(err))
+	}
+
 	// Create handlers
 	lookupHandler := handlers.NewLookupHandler(fileService, formatterService)
 	healthHandler := handlers.NewHealthHandler()
+	movieSearchHandler := handlers.NewMovieSearchHandler(tmdbProvider)
+	tvShowSearchHandler := handlers.NewTVShowSearchHandler(tmdbProvider)
 
 	// Get server configuration from flags
 	port, _ := cmd.Flags().GetString("port")
@@ -51,6 +60,8 @@ func Run(cmd *cobra.Command, args []string) {
 	api.HandleFunc("/current", handlers.CurrentDirectory).Methods("GET")
 	api.HandleFunc("/lookup", lookupHandler.Lookup).Methods("POST")
 	api.HandleFunc("/health", healthHandler.Health).Methods("GET")
+	api.HandleFunc("/search/movies", movieSearchHandler.Search).Methods("GET")
+	api.HandleFunc("/search/tvshows", tvShowSearchHandler.Search).Methods("GET")
 
 	// Serve static files from web directory
 	webDir := filepath.Join(".", "web", "build")
