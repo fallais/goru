@@ -1,6 +1,6 @@
 # Goru
 
-**Goru** *(Golang Rename Utility)* is a powerful yet simple tool for renaming your video files, inspired by [Terraform](https://github.com/hashicorp/terraform).
+**Goru** *(Golang Rename Utility)* is a powerful yet simple tool for renaming your video files.  
 It helps you keep your media library clean, organized, and easily searchable—whether you prefer the CLI or a Web App.
 
 ![Logo](assets/logo_sm.png)
@@ -16,15 +16,25 @@ It helps you keep your media library clean, organized, and easily searchable—w
 - **💬 Subtitle support**: Download subtitles from OpenSubtitles
 - **🔄 Safe operations**: Revert changes at any time
 
-## Screenshots
+## Web app
 
-![CLI](assets/screenshots/screenshot_cli.png)
+The Web app aims at providing a tool that you will deploy within your architecture and will take care of your collection.
+
+### Screensots
 
 ![Web app](assets/screenshots/screenshot_webapp.png)
 
-## Usage
+## CLI
 
-### On a single directory (aka no config file)
+For automation purposes.
+
+### Screenshots
+
+![CLI](assets/screenshots/screenshot_cli.png)
+
+### Usage
+
+#### On a single directory (aka no config file)
 
 Perfect for quick checks or CI/CD pipelines.
 
@@ -39,5 +49,5 @@ goru apply --dir . --auto-approve
 goru state revert --all
 ```
 
-### Handle multiple directories (aka providing a config file)
+#### Handle multiple directories (aka providing a config file)
 
