@@ -24,6 +24,12 @@ The Web app aims at providing a tool that you will deploy within your architectu
 
 ![Web app](assets/screenshots/screenshot_webapp.png)
 
+### Deploy
+
+#### With Docker (recommanded)
+
+
+
 ## CLI
 
 For automation purposes.

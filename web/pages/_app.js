@@ -16,11 +16,13 @@ import {
   Search,
   Settings as SettingsIcon,
   FolderOpen,
+  FindInPage,
 } from '@mui/icons-material';
 import { CacheProvider } from '@emotion/react';
 import createEmotionCache from '../lib/createEmotionCache';
 import { useRouter } from 'next/router';
 import { NotificationProvider, useNotification } from '../contexts/NotificationContext';
+import { DirectoryProvider } from '../contexts/DirectoryContext';
 import NotificationSnackbar from '../components/NotificationSnackbar';
 import AxiosSetup from '../components/AxiosSetup';
 import { setupAxiosInterceptors } from '../lib/axios';
@@ -57,7 +59,8 @@ export default function MyApp(props) {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <NotificationProvider>
-          <AxiosSetup />
+          <DirectoryProvider>
+            <AxiosSetup />
           <AppBar position="static">
             <Toolbar>
               <Typography variant="h6" component="div" sx={{ mr: 4 }}>
@@ -72,6 +75,15 @@ export default function MyApp(props) {
                 sx={{ mr: 2 }}
               >
                 Browse
+              </Button>
+              
+              <Button
+                color="inherit"
+                startIcon={<FindInPage />}
+                onClick={() => handleNavigate('/lookup')}
+                sx={{ mr: 2 }}
+              >
+                Lookup
               </Button>
               
               <Button
@@ -128,6 +140,7 @@ export default function MyApp(props) {
             <Component {...pageProps} searchPath={searchPath} />
           </Container>
           <NotificationSnackbar />
+        </DirectoryProvider>
         </NotificationProvider>
       </ThemeProvider>
     </CacheProvider>

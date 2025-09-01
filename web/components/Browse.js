@@ -47,15 +47,18 @@ import {
   Refresh,
   Close,
   Info,
+  Edit,
 } from '@mui/icons-material';
 import axios from 'axios';
 import { useApiCall } from '../hooks/useApiCall';
 import { useNotification } from '../contexts/NotificationContext';
+import { useDirectory } from '../contexts/DirectoryContext';
 
 function Browse({ searchPath }) {
   const router = useRouter();
   const apiCall = useApiCall();
   const { showError } = useNotification();
+  const { selectDirectory } = useDirectory();
   const [currentPath, setCurrentPath] = useState('');
   const [files, setFiles] = useState([]);
   const [plan, setPlan] = useState(null);
@@ -153,6 +156,25 @@ function Browse({ searchPath }) {
     }
     
     setLoading(false);
+  };
+
+  const handleEditLookup = () => {
+    if (!currentPath.trim()) {
+      showError('No directory selected');
+      return;
+    }
+
+    // Get the directory name from the path
+    const directoryName = currentPath.split('\\').pop() || currentPath.split('/').pop() || 'Unknown Directory';
+    
+    // Store directory data in context
+    selectDirectory({
+      name: directoryName,
+      path: currentPath
+    });
+    
+    // Navigate to lookup page (no query parameters needed)
+    router.push('/lookup');
   };
 
   const handleApply = async () => {
@@ -651,6 +673,24 @@ function Browse({ searchPath }) {
               disabled={loading}
             >
               Lookup
+            </Button>
+
+            <Button
+              variant="outlined"
+              sx={{ 
+                borderColor: '#2196f3',
+                color: '#2196f3',
+                '&:hover': { 
+                  borderColor: '#1976d2',
+                  backgroundColor: 'rgba(33, 150, 243, 0.04)'
+                },
+                fontWeight: 'bold'
+              }}
+              startIcon={<Edit />}
+              onClick={handleEditLookup}
+              disabled={loading || !currentPath.trim()}
+            >
+              Edit Lookup
             </Button>
             
             <Button
