@@ -11,6 +11,8 @@ import {
   TextField,
   Box,
   InputAdornment,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import { 
   Search,
@@ -18,6 +20,9 @@ import {
   FolderOpen,
   FindInPage,
   History,
+  ArrowDropDown,
+  Movie,
+  Tv,
 } from '@mui/icons-material';
 import { CacheProvider } from '@emotion/react';
 import createEmotionCache from '../lib/createEmotionCache';
@@ -43,9 +48,23 @@ export default function MyApp(props) {
   const { Component, emotionCache = clientSideEmotionCache, pageProps } = props;
   const router = useRouter();
   const [searchPath, setSearchPath] = useState('');
+  const [searchAnchorEl, setSearchAnchorEl] = useState(null);
 
   const handleNavigate = (path) => {
     router.push(path);
+  };
+
+  const handleSearchClick = (event) => {
+    setSearchAnchorEl(event.currentTarget);
+  };
+
+  const handleSearchClose = () => {
+    setSearchAnchorEl(null);
+  };
+
+  const handleSearchOption = (type) => {
+    handleNavigate(`/search?type=${type}`);
+    handleSearchClose();
   };
 
   const handleSearchKeyPress = (e) => {
@@ -86,6 +105,38 @@ export default function MyApp(props) {
               >
                 Lookup
               </Button>
+              
+              <Button
+                color="inherit"
+                startIcon={<Search />}
+                endIcon={<ArrowDropDown />}
+                onClick={handleSearchClick}
+                sx={{ mr: 2 }}
+              >
+                Search
+              </Button>
+              <Menu
+                anchorEl={searchAnchorEl}
+                open={Boolean(searchAnchorEl)}
+                onClose={handleSearchClose}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'left',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'left',
+                }}
+              >
+                <MenuItem onClick={() => handleSearchOption('tv')}>
+                  <Tv sx={{ mr: 1 }} />
+                  TV Shows
+                </MenuItem>
+                <MenuItem onClick={() => handleSearchOption('movies')}>
+                  <Movie sx={{ mr: 1 }} />
+                  Movies
+                </MenuItem>
+              </Menu>
               
               <Button
                 color="inherit"
