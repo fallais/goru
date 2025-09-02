@@ -17,6 +17,7 @@ import {
   Settings as SettingsIcon,
   FolderOpen,
   FindInPage,
+  History,
 } from '@mui/icons-material';
 import { CacheProvider } from '@emotion/react';
 import createEmotionCache from '../lib/createEmotionCache';
@@ -84,6 +85,15 @@ export default function MyApp(props) {
                 sx={{ mr: 2 }}
               >
                 Lookup
+              </Button>
+              
+              <Button
+                color="inherit"
+                startIcon={<History />}
+                onClick={() => handleNavigate('/state')}
+                sx={{ mr: 2 }}
+              >
+                State
               </Button>
               
               <Button

@@ -47,6 +47,11 @@ func Run(cmd *cobra.Command, args []string) {
 	movieSearchHandler := handlers.NewMovieSearchHandler(tmdbProvider)
 	tvShowSearchHandler := handlers.NewTVShowSearchHandler(tmdbProvider)
 
+	stateHandler, err := handlers.NewStateHandler()
+	if err != nil {
+		log.Fatal("failed to create state handler", zap.Error(err))
+	}
+
 	// Setup routes
 	router := mux.NewRouter()
 
@@ -59,6 +64,8 @@ func Run(cmd *cobra.Command, args []string) {
 	api.HandleFunc("/health", healthHandler.Health).Methods("GET")
 	api.HandleFunc("/search/movies", movieSearchHandler.Search).Methods("GET")
 	api.HandleFunc("/search/tvshows", tvShowSearchHandler.Search).Methods("GET")
+	api.HandleFunc("/state", stateHandler.State).Methods("GET")
+	api.HandleFunc("/state/revert", stateHandler.Revert).Methods("POST")
 
 	// Serve static files from web directory
 	webDir := filepath.Join(".", "web", "build")
