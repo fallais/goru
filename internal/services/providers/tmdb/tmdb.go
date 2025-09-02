@@ -8,8 +8,10 @@ import (
 	"goru/internal/models"
 	"goru/internal/services/providers"
 	"goru/internal/utils"
+	"goru/pkg/log"
 
 	tmdb "github.com/cyruzin/golang-tmdb"
+	"go.uber.org/zap"
 )
 
 // TMDB allows up to 50 requests per second
@@ -151,6 +153,7 @@ func (d *tmdbProvider) GetTVShow(name string, year int) (*models.TVShow, error) 
 // SearchTVShow searches for TV shows by name with improved matching
 func (d *tmdbProvider) SearchTVShows(name string, year int) ([]*models.TVShow, error) {
 	d.rateLimiter.Wait()
+	log.Debug("searching TV show", zap.String("name", name), zap.Int("year", year))
 
 	options := map[string]string{}
 	if year > 0 {

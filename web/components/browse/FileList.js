@@ -5,13 +5,7 @@ import {
   List,
   ListItem,
   ListItemText,
-  Button,
-  Box,
-  CircularProgress,
 } from '@mui/material';
-import {
-  Edit,
-} from '@mui/icons-material';
 import FileListItem from './FileListItem';
 import { categorizeFiles, createChangesMap } from '../../utils/fileUtils';
 
@@ -21,31 +15,14 @@ function FileList({
   loading, 
   currentPath,
   onFileClick, 
-  onDirectoryClick, 
-  onEditLookup 
+  onDirectoryClick 
 }) {
   if (files.length === 0) {
     return (
       <Paper sx={{ p: 2, mt: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6">
-            Directory Contents
-          </Typography>
-          <Button
-            variant="contained"
-            size="small"
-            sx={{ 
-              backgroundColor: '#4caf50', 
-              '&:hover': { backgroundColor: '#45a049' },
-              fontWeight: 'bold'
-            }}
-            startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <Edit />}
-            onClick={onEditLookup}
-            disabled={loading || !currentPath || !currentPath.trim()}
-          >
-            Lookup
-          </Button>
-        </Box>
+        <Typography variant="h6" gutterBottom>
+          Directory Contents
+        </Typography>
         <Typography variant="body2" color="text.secondary">
           {loading ? 'Loading directory contents...' : 'No files found in this directory.'}
         </Typography>
@@ -58,25 +35,9 @@ function FileList({
 
   return (
     <Paper sx={{ p: 2, mt: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6">
-          Directory Contents
-        </Typography>
-        <Button
-          variant="contained"
-          size="small"
-          sx={{ 
-            backgroundColor: '#4caf50', 
-            '&:hover': { backgroundColor: '#45a049' },
-            fontWeight: 'bold'
-          }}
-          startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <Edit />}
-          onClick={onEditLookup}
-          disabled={loading || !currentPath || !currentPath.trim()}
-        >
-          Lookup
-        </Button>
-      </Box>
+      <Typography variant="h6" gutterBottom>
+        Directory Contents
+      </Typography>
       
       <Typography variant="body2" color="text.secondary" gutterBottom>
         Found {videoFiles.length} video file(s), {directories.length} folder(s), and {otherFiles.length} other file(s)

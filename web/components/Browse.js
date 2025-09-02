@@ -1,9 +1,11 @@
 import React from 'react';
-import { Box } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 import {
   DirectoryBreadcrumbs,
   FileList,
   FileInfoModal,
+  ActionsPanel,
+  ResultsPanel,
 } from './browse/index';
 import { useBrowseLogic } from '../hooks/useBrowseLogic';
 
@@ -22,7 +24,9 @@ function Browse({ searchPath }) {
     loadDirectory,
     handleDirectoryClick,
     handleParentDirectory,
+    handleLookup,
     handleEditLookup,
+    handleApply,
     handleFileClick,
     handleCloseModal,
     handleRefresh,
@@ -39,15 +43,33 @@ function Browse({ searchPath }) {
         onRefresh={handleRefresh}
       />
       
-      <FileList
-        files={files}
-        plan={plan}
+      <ActionsPanel
         loading={loading}
         currentPath={currentPath}
-        onFileClick={handleFileClick}
-        onDirectoryClick={handleDirectoryClick}
-        onEditLookup={handleEditLookup}
+        onPlan={handleLookup}
+        onApply={handleApply}
+        planExists={plan && plan.changes && plan.changes.length > 0}
       />
+      
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          <FileList
+            files={files}
+            plan={plan}
+            loading={loading}
+            currentPath={currentPath}
+            onFileClick={handleFileClick}
+            onDirectoryClick={handleDirectoryClick}
+          />
+        </Grid>
+        
+        <Grid item xs={12} md={6}>
+          <ResultsPanel
+            plan={plan}
+            loading={loading}
+          />
+        </Grid>
+      </Grid>
       
       <FileInfoModal
         open={modalOpen}

@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"goru/internal/cmd/common"
 	"goru/internal/models"
 	"goru/internal/services/files"
 	"goru/internal/services/formatters"
@@ -120,17 +121,13 @@ func (h *LookupHandler) processDirectory(directory models.Directory) (*plans.Pla
 	}
 
 	// Lookup media information for each file concurrently
-	maxConcurrent := viper.GetInt("max_concurrent")
-	if maxConcurrent <= 0 {
-		maxConcurrent = 10 // fallback to default
-	}
-	processedFiles, err := h.processFilesMetadataConcurrently(videoFiles, provider, maxConcurrent)
+	processedFiles, processedSubtitles, err := common.ProcessFilesConcurrently(videoFiles, provider, nil, viper.GetInt("parallelism"))
 	if err != nil {
 		log.Error("failed to process files concurrently", zap.Error(err))
 	}
 
 	// Create the plan
-	plan, err := plans.NewPlan(processedFiles, nil, h.formatterService)
+	plan, err := plans.NewPlan(processedFiles, processedSubtitles, h.formatterService)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create plan: %w", err)
 	}

@@ -51,6 +51,10 @@ func removeEpisodeInfo(title string) string {
 	re := regexp.MustCompile(`s\d{1,2}e\d{1,2}`)
 	title = re.ReplaceAllString(title, " ")
 
+	// Remove #x## patterns (e.g., 1x46, 2x03, etc.)
+	reXPattern := regexp.MustCompile(`\d{1,2}x\d{1,3}`)
+	title = reXPattern.ReplaceAllString(title, " ")
+
 	// Remove other episode patterns
 	episodePatterns := []string{
 		"season", "episode", "ep", "part",

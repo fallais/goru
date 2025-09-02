@@ -89,7 +89,7 @@ func RunPlan(fileService *files.FileService, formatterService *formatters.Format
 		}
 
 		// Process files concurrently
-		processedFiles, processedSubtitles, err := processFilesConcurrently(currentFiles, provider, subtitleProvider, viper.GetInt("parallelism"))
+		processedFiles, processedSubtitles, err := ProcessFilesConcurrently(currentFiles, provider, subtitleProvider, viper.GetInt("parallelism"))
 		if err != nil {
 			log.Error("failed to process files concurrently", zap.Error(err))
 		}
@@ -205,7 +205,7 @@ type FileProcessResult struct {
 	Error    error
 }
 
-func processFilesConcurrently(files []*models.VideoFile, provider providers.Provider, subtitleProvider subtitles.SubtitleProvider, maxConcurrent int) ([]*models.VideoFile, []string, error) {
+func ProcessFilesConcurrently(files []*models.VideoFile, provider providers.Provider, subtitleProvider subtitles.SubtitleProvider, maxConcurrent int) ([]*models.VideoFile, []string, error) {
 	if len(files) == 0 {
 		return nil, nil, nil
 	}
@@ -228,7 +228,9 @@ func processFilesConcurrently(files []*models.VideoFile, provider providers.Prov
 
 			// Process file synchronously
 			log.Debug("providing metadata", zap.String("file", f.Filename))
-			if err := provider.Provide(f); err != nil {
+			err := provider.Provide(f)
+			if err != nil {
+				log.Error("failed to provide metadata", zap.Error(err), zap.String("file", f.Path))
 				result.Error = err
 			}
 

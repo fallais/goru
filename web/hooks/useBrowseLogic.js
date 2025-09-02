@@ -116,8 +116,20 @@ export function useBrowseLogic() {
     });
 
     if (result.success) {
-      console.log('Lookup API response:', result.data.data);
-      setPlan(result.data.data.plan);
+      console.log('Lookup API response:', result.data);
+      
+      // Handle different possible response structures
+      let planData = null;
+      if (result.data?.data?.plan) {
+        planData = result.data.data.plan;
+      } else if (result.data?.plan) {
+        planData = result.data.plan;
+      } else if (result.data) {
+        // If the entire response is the plan data
+        planData = result.data;
+      }
+      
+      setPlan(planData);
     }
     
     setLoading(false);
