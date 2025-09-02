@@ -7,7 +7,7 @@ import {
   ListItemText,
 } from '@mui/material';
 import FileListItem from './FileListItem';
-import { categorizeFiles, createChangesMap } from '../../utils/fileUtils';
+import { categorizeFiles } from '../../utils/fileUtils';
 
 function FileList({ 
   files, 
@@ -31,7 +31,6 @@ function FileList({
   }
 
   const { videoFiles, directories, otherFiles } = categorizeFiles(files);
-  const changesByPath = createChangesMap(plan);
 
   return (
     <Paper sx={{ p: 2, mt: 2 }}>
@@ -50,7 +49,6 @@ function FileList({
             key={`dir-${index}`}
             file={file}
             fileType="directory"
-            change={null}
             onFileClick={onFileClick}
             onDirectoryClick={onDirectoryClick}
           />
@@ -62,7 +60,6 @@ function FileList({
             key={`video-${index}`}
             file={file}
             fileType="video"
-            change={changesByPath[file.path]}
             onFileClick={onFileClick}
             onDirectoryClick={onDirectoryClick}
           />
@@ -74,7 +71,6 @@ function FileList({
             key={`other-${index}`}
             file={file}
             fileType="other"
-            change={null}
             onFileClick={onFileClick}
             onDirectoryClick={onDirectoryClick}
           />
