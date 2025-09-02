@@ -40,20 +40,32 @@ export const useTMDBSearch = () => {
       errorPrefix: `Failed to search ${mediaType === 'movie' ? 'movies' : 'TV shows'}`
     });
     
+    console.log('API Response:', result); // Debug log
+    
     if (result.success) {
-      // Handle the new response structure
-      if (mediaType === 'movie') {
-        setTmdbResults(result.data.results || []);
-      } else {
-        // For TV shows, we might have both results and episodes
-        const tvShowResults = result.data.results || [];
-        // If episodes are present, add them to the first result for display
-        if (result.data.episodes && result.data.episodes.length > 0 && tvShowResults.length > 0) {
-          tvShowResults[0].episodes = result.data.episodes;
+      // result.data now contains the actual API response: { results: [...], status: "success" }
+      const apiResponse = result.data;
+      console.log('API Response data:', apiResponse); // Debug log
+      
+      if (apiResponse && apiResponse.results) {
+        if (mediaType === 'movie') {
+          setTmdbResults(apiResponse.results);
+        } else {
+          // For TV shows
+          const tvShowResults = apiResponse.results;
+          console.log('TV Show results:', tvShowResults); // Debug log
+          // If episodes are present, add them to the first result for display
+          if (apiResponse.episodes && apiResponse.episodes.length > 0 && tvShowResults.length > 0) {
+            tvShowResults[0].episodes = apiResponse.episodes;
+          }
+          setTmdbResults(tvShowResults);
         }
-        setTmdbResults(tvShowResults);
+      } else {
+        console.warn('Unexpected API response structure:', apiResponse);
+        setTmdbResults([]);
       }
     } else {
+      console.error('API call failed:', result.error);
       // Clear results on failure
       setTmdbResults([]);
     }

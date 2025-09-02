@@ -55,7 +55,7 @@ func (h *MovieSearchHandler) Search(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	results, err := h.searchMovies(query, year)
+	movies, err := h.provider.SearchMovies(query, year)
 	if err != nil {
 		log.Error("Movie search failed", zap.Error(err), zap.String("query", query))
 		writeError(w, fmt.Sprintf("search failed: %v", err), http.StatusInternalServerError)
@@ -63,19 +63,9 @@ func (h *MovieSearchHandler) Search(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := MovieSearchResponse{
-		Results: results,
+		Results: movies,
 		Status:  "success",
 	}
 
 	writeJSON(w, response)
-}
-
-// searchMovies searches for movies using the provider
-func (h *MovieSearchHandler) searchMovies(query string, year int) ([]*models.Movie, error) {
-	movies, err := h.provider.SearchMovies(query, year)
-	if err != nil {
-		return nil, fmt.Errorf("movie search failed: %w", err)
-	}
-
-	return movies, nil
 }

@@ -19,7 +19,8 @@ export const useApiCall = () => {
         showSuccess(successMessage);
       }
       
-      return { success: true, data: result };
+      // Return just the response data, not the full Axios response object
+      return { success: true, data: result.data };
     } catch (err) {
       let errorMessage = 'An unexpected error occurred';
       

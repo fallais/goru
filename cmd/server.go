@@ -4,39 +4,27 @@ import (
 	"goru/internal/cmd/server"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-var (
-	serverPort string
-	serverHost string
-)
-
-// serverCmd represents the server command
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Start the web server for the goru application",
-	Long: `Start a web server that provides a user interface for goru operations.
-
-The web server provides:
-- A file browser for selecting directories to scan
-- Interface to search for media information using TMDB
-- Visual display of rename plans before applying changes
-- Real-time feedback during rename operations
-
-Examples:
-  # Start server on default port (8080)
-  goru server
-  
-  # Start server on specific port
-  goru server --port 3000
-  
-  # Start server on specific host and port
-  goru server --host 0.0.0.0 --port 8080`,
-	Run: server.Run,
+	Long:  `Start a web server that provides a user interface for goru operations.`,
+	Run:   server.Run,
 }
 
 func init() {
 	rootCmd.AddCommand(serverCmd)
-	serverCmd.Flags().StringVarP(&serverPort, "port", "p", "8080", "Port to run the server on")
-	serverCmd.Flags().StringVarP(&serverHost, "host", "H", "localhost", "Host to bind the server to")
+	serverCmd.Flags().String("port", "", "Port to run the server on")
+	serverCmd.Flags().String("host", "", "Host to bind the server to")
+	serverCmd.Flags().String("directory", "", "Default directory to scan")
+
+	viper.BindPFlag("host", serverCmd.Flags().Lookup("host"))
+	viper.BindPFlag("port", serverCmd.Flags().Lookup("port"))
+	viper.BindPFlag("directory", serverCmd.Flags().Lookup("directory"))
+
+	viper.SetDefault("host", "localhost")
+	viper.SetDefault("port", "8080")
+	viper.SetDefault("directory", ".")
 }

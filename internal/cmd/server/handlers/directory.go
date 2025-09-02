@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"fmt"
+	"goru/pkg/log"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/spf13/viper"
 )
 
 // Response structures
@@ -66,42 +69,10 @@ func Directory(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, response)
 }
 
-// CurrentDirectory handles current directory request
-func CurrentDirectory(w http.ResponseWriter, r *http.Request) {
-	// Get current working directory
-	cwd, err := os.Getwd()
-	if err != nil {
-		writeError(w, fmt.Sprintf("failed to get current directory: %v", err), http.StatusInternalServerError)
-		return
-	}
+// DefaultDirectory handles current directory request
+func DefaultDirectory(w http.ResponseWriter, r *http.Request) {
+	log.Info("Default directory requested")
 
-	// Read directory contents
-	entries, err := os.ReadDir(cwd)
-	if err != nil {
-		writeError(w, fmt.Sprintf("failed to read current directory: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	var files []FileInfo
-	for _, entry := range entries {
-		info, err := entry.Info()
-		if err != nil {
-			continue
-		}
-
-		files = append(files, FileInfo{
-			Name:    entry.Name(),
-			Path:    filepath.Join(cwd, entry.Name()),
-			IsDir:   entry.IsDir(),
-			Size:    info.Size(),
-			ModTime: info.ModTime().Format("2006-01-02 15:04:05"),
-		})
-	}
-
-	response := DirectoryResponse{
-		Files: files,
-		Path:  cwd,
-	}
-
-	writeJSON(w, response)
+	// Return default directory
+	writeJSON(w, viper.GetString("directory"))
 }

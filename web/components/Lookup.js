@@ -78,8 +78,8 @@ function Lookup() {
   const generateProposedChanges = (file, tmdbItem) => {
     // Generate a proposed new filename based on TMDB data
     const title = tmdbItem.title || tmdbItem.name;
-    const year = tmdbItem.release_date ? new Date(tmdbItem.release_date).getFullYear() : 
-                 tmdbItem.first_air_date ? new Date(tmdbItem.first_air_date).getFullYear() : '';
+    const releaseDate = tmdbItem.release_date || tmdbItem.first_air_date;
+    const year = releaseDate ? new Date(releaseDate).getFullYear() : '';
     
     // Get file extension
     const extension = file.name.substring(file.name.lastIndexOf('.'));

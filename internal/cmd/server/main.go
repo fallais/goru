@@ -47,17 +47,13 @@ func Run(cmd *cobra.Command, args []string) {
 	movieSearchHandler := handlers.NewMovieSearchHandler(tmdbProvider)
 	tvShowSearchHandler := handlers.NewTVShowSearchHandler(tmdbProvider)
 
-	// Get server configuration from flags
-	port, _ := cmd.Flags().GetString("port")
-	host, _ := cmd.Flags().GetString("host")
-
 	// Setup routes
 	router := mux.NewRouter()
 
 	// API routes
 	api := router.PathPrefix("/api").Subrouter()
 	api.HandleFunc("/directory", handlers.Directory).Methods("GET")
-	api.HandleFunc("/current", handlers.CurrentDirectory).Methods("GET")
+	api.HandleFunc("/directory/default", handlers.DefaultDirectory).Methods("GET")
 	api.HandleFunc("/lookup", lookupHandler.Lookup).Methods("POST")
 	api.HandleFunc("/health", healthHandler.Health).Methods("GET")
 	api.HandleFunc("/search/movies", movieSearchHandler.Search).Methods("GET")
@@ -74,7 +70,7 @@ func Run(cmd *cobra.Command, args []string) {
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir(webDir)))
 
 	// Start server
-	address := fmt.Sprintf("%s:%s", host, port)
+	address := fmt.Sprintf("%s:%s", viper.GetString("host"), viper.GetString("port"))
 	log.Info("Server starting", zap.String("address", address))
 	log.Info("Open your browser to", zap.String("url", fmt.Sprintf("http://%s", address)))
 
