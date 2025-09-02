@@ -16,6 +16,7 @@ export function useBrowseLogic() {
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [highlightedFilePath, setHighlightedFilePath] = useState(null);
 
   // Load current directory on component mount
   useEffect(() => {
@@ -195,6 +196,28 @@ export function useBrowseLogic() {
     loadDirectory(currentPath);
   };
 
+  // Hover-based highlight handlers
+  const handleFileHover = (filePath) => {
+    setHighlightedFilePath(filePath);
+  };
+
+  const handleFileHoverLeave = () => {
+    setHighlightedFilePath(null);
+  };
+
+  const handlePlanResultHover = (change) => {
+    setHighlightedFilePath(change.before.path);
+  };
+
+  const handlePlanResultHoverLeave = () => {
+    setHighlightedFilePath(null);
+  };
+
+  // Clear highlight when plan changes
+  useEffect(() => {
+    setHighlightedFilePath(null);
+  }, [plan]);
+
   return {
     // State
     currentPath,
@@ -203,6 +226,7 @@ export function useBrowseLogic() {
     loading,
     modalOpen,
     selectedFile,
+    highlightedFilePath,
     
     // Handlers
     loadCurrentDirectory,
@@ -215,5 +239,9 @@ export function useBrowseLogic() {
     handleFileClick,
     handleCloseModal,
     handleRefresh,
+    handleFileHover,
+    handleFileHoverLeave,
+    handlePlanResultHover,
+    handlePlanResultHoverLeave,
   };
 }

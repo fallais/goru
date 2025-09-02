@@ -42,7 +42,7 @@ func Run(cmd *cobra.Command, args []string) {
 	}
 
 	// Create handlers
-	lookupHandler := handlers.NewLookupHandler(fileService, formatterService)
+	planHandler := handlers.NewPlanHandler(fileService, formatterService)
 	healthHandler := handlers.NewHealthHandler()
 	movieSearchHandler := handlers.NewMovieSearchHandler(tmdbProvider)
 	tvShowSearchHandler := handlers.NewTVShowSearchHandler(tmdbProvider)
@@ -54,7 +54,8 @@ func Run(cmd *cobra.Command, args []string) {
 	api := router.PathPrefix("/api").Subrouter()
 	api.HandleFunc("/directory", handlers.Directory).Methods("GET")
 	api.HandleFunc("/directory/default", handlers.DefaultDirectory).Methods("GET")
-	api.HandleFunc("/lookup", lookupHandler.Lookup).Methods("POST")
+	api.HandleFunc("/plan/create", planHandler.Create).Methods("POST")
+	api.HandleFunc("/plan/apply", planHandler.Apply).Methods("POST")
 	api.HandleFunc("/health", healthHandler.Health).Methods("GET")
 	api.HandleFunc("/search/movies", movieSearchHandler.Search).Methods("GET")
 	api.HandleFunc("/search/tvshows", tvShowSearchHandler.Search).Methods("GET")

@@ -19,7 +19,7 @@ function ActionsPanel({
 }) {
   return (
     <Paper sx={{ p: 2, mt: 2 }}>
-      <Box sx={{ display: 'flex', gap: 2 }}>
+      <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
         <Button
           variant="contained"
           sx={{ 

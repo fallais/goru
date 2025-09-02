@@ -4,22 +4,24 @@ import {
   Typography,
   List,
   ListItem,
+  ListItemButton,
   Box,
   Chip,
-  Divider,
 } from '@mui/material';
 import { categorizeFiles } from '../../utils/fileUtils';
 
-function ResultsPanel({ plan, loading }) {
+function ResultsPanel({ plan, loading, highlightedFilePath, onPlanResultHover, onPlanResultHoverLeave }) {
   if (loading) {
     return (
       <Paper sx={{ p: 2, mt: 2, height: 'fit-content' }}>
-        <Typography variant="h6" gutterBottom>
-          Plan Results
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Loading plan results...
-        </Typography>
+        <Box sx={{ minHeight: 72, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <Typography variant="h6" gutterBottom>
+            Plan Results
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Loading plan results...
+          </Typography>
+        </Box>
       </Paper>
     );
   }
@@ -27,31 +29,35 @@ function ResultsPanel({ plan, loading }) {
   if (!plan || !plan.changes || plan.changes.length === 0) {
     return (
       <Paper sx={{ p: 2, mt: 2, height: 'fit-content' }}>
-        <Typography variant="h6" gutterBottom>
-          Plan Results
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          No changes to display. Run Plan to see proposed file renames.
-        </Typography>
+        <Box sx={{ minHeight: 72, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <Typography variant="h6" gutterBottom>
+            Plan Results
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            No changes to display. Run Plan to see proposed file renames.
+          </Typography>
+        </Box>
       </Paper>
     );
   }
 
   return (
     <Paper sx={{ p: 2, mt: 2, height: 'fit-content' }}>
-      <Typography variant="h6" gutterBottom>
-        Plan Results
-      </Typography>
-      
-      <Box sx={{ mb: 2 }}>
-        <Chip 
-          label={`${plan.changes.length} file(s) to rename`} 
-          color="primary" 
-          size="small" 
-        />
+      <Box sx={{ minHeight: 72, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <Typography variant="h6" gutterBottom>
+          Plan Results
+        </Typography>
+        
+        <Box sx={{ mb: 2 }}>
+          <Chip 
+            label={`${plan.changes.length} file(s) to rename`} 
+            color="primary" 
+            size="small" 
+          />
+        </Box>
       </Box>
 
-      <List dense>
+      <List dense sx={{ pt: 0 }}>
         {(() => {
           // Create a sorted list of changes based on file categorization
           const changesByPath = {};
@@ -91,18 +97,41 @@ function ResultsPanel({ plan, loading }) {
             if (change) orderedChanges.push(change);
           });
 
-          return orderedChanges.map((change, index) => (
-            <React.Fragment key={index}>
-              <ListItem sx={{ px: 0, py: 1 }}>
-                <Box sx={{ width: '100%' }}>
-                  <Typography variant="body2" color="text.primary">
-                    {change.after?.filename || 'Unknown filename'}
-                  </Typography>
-                </Box>
+          return orderedChanges.map((change, index) => {
+            const isHighlighted = highlightedFilePath === change.before.path;
+            
+            return (
+              <ListItem
+                key={index}
+                sx={{ 
+                  px: 0, 
+                  py: 0,
+                  backgroundColor: isHighlighted ? 'primary.light' : 'transparent',
+                  borderRadius: 1,
+                }}
+              >
+                <ListItemButton
+                  onMouseEnter={() => onPlanResultHover && onPlanResultHover(change)}
+                  onMouseLeave={() => onPlanResultHoverLeave && onPlanResultHoverLeave()}
+                  sx={{
+                    px: 2,
+                    py: 1,
+                    '&:hover': {
+                      backgroundColor: 'grey.100',
+                    },
+                  }}
+                >
+                  <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Typography variant="body2" color="text.primary" sx={{ fontWeight: 'medium' }}>
+                        {change.after?.filename || 'Unknown filename'}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </ListItemButton>
               </ListItem>
-              {index < orderedChanges.length - 1 && <Divider />}
-            </React.Fragment>
-          ));
+            );
+          });
         })()}
       </List>
     </Paper>

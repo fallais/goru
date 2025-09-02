@@ -18,6 +18,7 @@ function Browse({ searchPath }) {
     loading,
     modalOpen,
     selectedFile,
+    highlightedFilePath,
     
     // Handlers
     loadCurrentDirectory,
@@ -30,6 +31,10 @@ function Browse({ searchPath }) {
     handleFileClick,
     handleCloseModal,
     handleRefresh,
+    handleFileHover,
+    handleFileHoverLeave,
+    handlePlanResultHover,
+    handlePlanResultHoverLeave,
   } = useBrowseLogic();
 
   return (
@@ -58,8 +63,11 @@ function Browse({ searchPath }) {
             plan={plan}
             loading={loading}
             currentPath={currentPath}
+            highlightedFilePath={highlightedFilePath}
             onFileClick={handleFileClick}
             onDirectoryClick={handleDirectoryClick}
+            onFileHover={handleFileHover}
+            onFileHoverLeave={handleFileHoverLeave}
           />
         </Grid>
         
@@ -67,6 +75,9 @@ function Browse({ searchPath }) {
           <ResultsPanel
             plan={plan}
             loading={loading}
+            highlightedFilePath={highlightedFilePath}
+            onPlanResultHover={handlePlanResultHover}
+            onPlanResultHoverLeave={handlePlanResultHoverLeave}
           />
         </Grid>
       </Grid>

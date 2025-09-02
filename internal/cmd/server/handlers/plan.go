@@ -13,7 +13,6 @@ import (
 	"goru/pkg/log"
 	"net/http"
 	"strings"
-	"sync"
 
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -32,20 +31,20 @@ type LookupResponse struct {
 	Error  string      `json:"error,omitempty"`
 }
 
-type LookupHandler struct {
+type PlanHandler struct {
 	fileService      *files.FileService
 	formatterService *formatters.FormatterService
 }
 
-func NewLookupHandler(fileService *files.FileService, formatterService *formatters.FormatterService) LookupHandler {
-	return LookupHandler{
+func NewPlanHandler(fileService *files.FileService, formatterService *formatters.FormatterService) PlanHandler {
+	return PlanHandler{
 		fileService:      fileService,
 		formatterService: formatterService,
 	}
 }
 
-// HandleLookup handles media lookup requests
-func (h *LookupHandler) Lookup(w http.ResponseWriter, r *http.Request) {
+// Create handles plan creation.
+func (h *PlanHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req LookupRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, "invalid request body", http.StatusBadRequest)
@@ -89,8 +88,13 @@ func (h *LookupHandler) Lookup(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, response)
 }
 
+// Apply handles plan application.
+func (h *PlanHandler) Apply(w http.ResponseWriter, r *http.Request) {
+
+}
+
 // processDirectory processes a directory and returns a plan (similar to CLI plan command)
-func (h *LookupHandler) processDirectory(directory models.Directory) (*plans.Plan, error) {
+func (h *PlanHandler) processDirectory(directory models.Directory) (*plans.Plan, error) {
 	log.Debug("Processing directory", zap.String("path", directory.Path), zap.String("type", directory.Type))
 
 	// Get video files from directory
@@ -133,55 +137,4 @@ func (h *LookupHandler) processDirectory(directory models.Directory) (*plans.Pla
 	}
 
 	return plan, nil
-}
-
-// processFilesMetadataConcurrently processes video files metadata concurrently with a limited number of workers
-func (h *LookupHandler) processFilesMetadataConcurrently(files []*models.VideoFile, provider providers.Provider, maxConcurrent int) ([]*models.VideoFile, error) {
-	if len(files) == 0 {
-		return files, nil
-	}
-
-	// Set conflict strategy for all files (use default if not specified)
-	for _, file := range files {
-		if file.ConflictStrategy == "" {
-			file.ConflictStrategy = models.DefaultConflictStrategy
-		}
-	}
-
-	// Create semaphore to limit concurrent operations
-	semaphore := make(chan struct{}, maxConcurrent)
-	var wg sync.WaitGroup
-	var hasErrors bool
-	var mu sync.Mutex
-
-	// Process each file concurrently
-	for _, file := range files {
-		wg.Add(1)
-		go func(f *models.VideoFile) {
-			defer wg.Done()
-
-			// Acquire semaphore
-			semaphore <- struct{}{}
-			defer func() { <-semaphore }()
-
-			// Provide metadata for the file
-			err := provider.Provide(f)
-			if err != nil {
-				log.Error("failed to provide metadata", zap.Error(err), zap.String("file", f.Path))
-				mu.Lock()
-				hasErrors = true
-				mu.Unlock()
-			}
-		}(file)
-	}
-
-	// Wait for all goroutines to complete
-	wg.Wait()
-
-	var err error
-	if hasErrors {
-		err = fmt.Errorf("some files failed to process metadata (check logs for details)")
-	}
-
-	return files, err
 }
