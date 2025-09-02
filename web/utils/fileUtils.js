@@ -39,9 +39,12 @@ export const isVideoFile = (filename) => {
 
 // Categorize files
 export const categorizeFiles = (files) => {
-  const videoFiles = files.filter(file => !file.isDir && isVideoFile(file.name));
-  const directories = files.filter(file => file.isDir);
-  const otherFiles = files.filter(file => !file.isDir && !isVideoFile(file.name));
+  const videoFiles = files.filter(file => !file.isDir && isVideoFile(file.name))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const directories = files.filter(file => file.isDir)
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const otherFiles = files.filter(file => !file.isDir && !isVideoFile(file.name))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   return { videoFiles, directories, otherFiles };
 };

@@ -94,46 +94,6 @@ export default function MyApp(props) {
               >
                 Settings
               </Button>
-              
-              {/* Search Bar */}
-              <Box sx={{ flexGrow: 1, mx: 2 }}>
-                <TextField
-                  size="small"
-                  placeholder="Jump to directory path..."
-                  value={searchPath}
-                  onChange={(e) => setSearchPath(e.target.value)}
-                  onKeyPress={handleSearchKeyPress}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Search />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      '& fieldset': {
-                        borderColor: 'rgba(255, 255, 255, 0.3)',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: 'rgba(255, 255, 255, 0.5)',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: 'rgba(255, 255, 255, 0.8)',
-                      },
-                    },
-                    '& .MuiInputBase-input': {
-                      color: 'white',
-                    },
-                    '& .MuiInputBase-input::placeholder': {
-                      color: 'rgba(255, 255, 255, 0.7)',
-                      opacity: 1,
-                    },
-                  }}
-                  fullWidth
-                />
-              </Box>
             </Toolbar>
           </AppBar>
           <Container maxWidth={false} sx={{ mt: 4, mb: 4 }}>
