@@ -6,8 +6,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.warn('DEPRECATED: /api/tmdb/search is deprecated. Use /api/search/movies or /api/search/tvshows instead.');
-    
+   
     let query, mediaType;
     
     if (req.method === 'GET') {

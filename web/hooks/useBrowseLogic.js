@@ -107,7 +107,7 @@ export function useBrowseLogic() {
       recursive: true
     };
 
-    const result = await apiCall.post('/api/lookup', {
+    const result = await apiCall.post('/api/plan/create', {
       directory: currentPath,
       type: settings.mediaType,
       provider: settings.provider,
@@ -163,7 +163,7 @@ export function useBrowseLogic() {
 
     setLoading(true);
 
-    const result = await apiCall.post('/api/apply', {
+    const result = await apiCall.post('/api/plan/apply', {
       plan: plan,
     }, {
       errorPrefix: 'Failed to apply changes',

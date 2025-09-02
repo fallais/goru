@@ -64,7 +64,7 @@ export const useFileOperations = () => {
         }]
       };
 
-      const result = await apiCall.post('/api/apply', {
+      const result = await apiCall.post('/api/plan/apply', {
         plan: plan,
       }, {
         errorPrefix: 'Failed to apply changes',
