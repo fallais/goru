@@ -1,19 +1,19 @@
-// Proxy for TV show episodes API
+// Proxy for movie details API
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { showId } = req.query;
+    const { id } = req.query;
     
-    if (!showId) {
-      return res.status(400).json({ error: 'Show ID is required' });
+    if (!id) {
+      return res.status(400).json({ error: 'Movie ID is required' });
     }
 
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:8080';
     
-    const response = await fetch(`${backendUrl}/api/tv-shows/${showId}/episodes`, {
+    const response = await fetch(`${backendUrl}/api/movies/${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     const data = await response.json();
     res.status(200).json(data);
   } catch (error) {
-    console.error('Error proxying TV show episodes request:', error);
-    res.status(500).json({ error: 'Failed to fetch episodes' });
+    console.error('Error proxying movie details request:', error);
+    res.status(500).json({ error: 'Failed to fetch movie details' });
   }
 }

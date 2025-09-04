@@ -96,15 +96,7 @@ export default function MyApp(props) {
               >
                 Browse
               </Button>
-              
-              <Button
-                color="inherit"
-                startIcon={<FindInPage />}
-                onClick={() => handleNavigate('/lookup')}
-                sx={{ mr: 2 }}
-              >
-                Lookup
-              </Button>
+            
               
               <Button
                 color="inherit"

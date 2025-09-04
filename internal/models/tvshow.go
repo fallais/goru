@@ -3,6 +3,7 @@ package models
 import "time"
 
 type TVShow struct {
+	ID           string      `json:"id"`
 	Name         string      `json:"name"`
 	OriginalName string      `json:"original_name"`
 	FirstAirDate time.Time   `json:"first_air_date"`

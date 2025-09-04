@@ -44,8 +44,8 @@ func Run(cmd *cobra.Command, args []string) {
 	// Create handlers
 	planHandler := handlers.NewPlanHandler(fileService, formatterService)
 	healthHandler := handlers.NewHealthHandler()
-	movieSearchHandler := handlers.NewMovieSearchHandler(tmdbProvider)
-	tvShowSearchHandler := handlers.NewTVShowSearchHandler(tmdbProvider)
+	movieHandler := handlers.NewMovieHandler(tmdbProvider)
+	tvShowHandler := handlers.NewTVShowHandler(tmdbProvider)
 
 	stateHandler, err := handlers.NewStateHandler()
 	if err != nil {
@@ -59,13 +59,25 @@ func Run(cmd *cobra.Command, args []string) {
 	api := router.PathPrefix("/api").Subrouter()
 	api.HandleFunc("/directory", handlers.Directory).Methods("GET")
 	api.HandleFunc("/directory/default", handlers.DefaultDirectory).Methods("GET")
+
+	// Plan routes
 	api.HandleFunc("/plan/create", planHandler.Create).Methods("POST")
 	api.HandleFunc("/plan/apply", planHandler.Apply).Methods("POST")
-	api.HandleFunc("/health", healthHandler.Health).Methods("GET")
-	api.HandleFunc("/search/movies", movieSearchHandler.Search).Methods("GET")
-	api.HandleFunc("/search/tvshows", tvShowSearchHandler.Search).Methods("GET")
+
+	// Movie routes
+	api.HandleFunc("/movies", movieHandler.Search).Methods("GET")
+	api.HandleFunc("/movies/{id}", movieHandler.Get).Methods("GET")
+
+	// Episode routes
+	api.HandleFunc("/tvshows", tvShowHandler.Search).Methods("GET")
+	api.HandleFunc("/tvshows/{id}", tvShowHandler.Get).Methods("GET")
+	api.HandleFunc("/tvshows/{id}/episodes", tvShowHandler.ListEpisodes).Methods("GET")
+
+	// State routes
 	api.HandleFunc("/state", stateHandler.State).Methods("GET")
 	api.HandleFunc("/state/revert", stateHandler.Revert).Methods("POST")
+
+	api.HandleFunc("/health", healthHandler.Health).Methods("GET")
 
 	// Serve static files from web directory
 	webDir := filepath.Join(".", "web", "build")

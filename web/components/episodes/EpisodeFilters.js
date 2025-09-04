@@ -11,7 +11,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Typography,
-  Grid,
+  Grid2,
 } from '@mui/material';
 import {
   ExpandMore,
@@ -66,8 +66,8 @@ export default function EpisodeFilters({ onFiltersChange }) {
           </Box>
         </AccordionSummary>
         <AccordionDetails>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6} md={4}>
+          <Grid2 container spacing={2}>
+            <Grid2 xs={12} sm={6} md={4}>
               <FormControl fullWidth>
                 <InputLabel>Minimum Rating</InputLabel>
                 <Select
@@ -83,9 +83,9 @@ export default function EpisodeFilters({ onFiltersChange }) {
                   <MenuItem value="9">9.0+</MenuItem>
                 </Select>
               </FormControl>
-            </Grid>
+            </Grid2>
 
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid2 xs={12} sm={6} md={4}>
               <FormControl fullWidth>
                 <InputLabel>Sort By</InputLabel>
                 <Select
@@ -99,10 +99,10 @@ export default function EpisodeFilters({ onFiltersChange }) {
                   <MenuItem value="title">Title</MenuItem>
                 </Select>
               </FormControl>
-            </Grid>
+            </Grid2>
 
             {hasActiveFilters && (
-              <Grid item xs={12}>
+              <Grid2 xs={12}>
                 <Button
                   startIcon={<Clear />}
                   onClick={clearFilters}
@@ -111,9 +111,9 @@ export default function EpisodeFilters({ onFiltersChange }) {
                 >
                   Clear Filters
                 </Button>
-              </Grid>
+              </Grid2>
             )}
-          </Grid>
+          </Grid2>
         </AccordionDetails>
       </Accordion>
     </Box>

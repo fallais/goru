@@ -22,7 +22,7 @@ export default async function handler(req, res) {
       searchParams.append('season', season.toString());
     }
     
-    const response = await fetch(`${backendUrl}/api/search/tvshows?${searchParams}`, {
+    const response = await fetch(`${backendUrl}/api/tvshows?${searchParams}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

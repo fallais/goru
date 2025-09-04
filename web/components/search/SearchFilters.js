@@ -12,7 +12,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Typography,
-  Grid,
+  Grid2,
 } from '@mui/material';
 import {
   ExpandMore,
@@ -78,8 +78,8 @@ export default function SearchFilters({ searchType, onFiltersChange }) {
           </Box>
         </AccordionSummary>
         <AccordionDetails>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6} md={3}>
+          <Grid2 container spacing={2}>
+            <Grid2 xs={12} sm={6} md={3}>
               <FormControl fullWidth>
                 <InputLabel>Year</InputLabel>
                 <Select
@@ -93,9 +93,9 @@ export default function SearchFilters({ searchType, onFiltersChange }) {
                   ))}
                 </Select>
               </FormControl>
-            </Grid>
+            </Grid2>
 
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid2 xs={12} sm={6} md={3}>
               <FormControl fullWidth>
                 <InputLabel>Genre</InputLabel>
                 <Select
@@ -109,9 +109,9 @@ export default function SearchFilters({ searchType, onFiltersChange }) {
                   ))}
                 </Select>
               </FormControl>
-            </Grid>
+            </Grid2>
 
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid2 xs={12} sm={6} md={3}>
               <FormControl fullWidth>
                 <InputLabel>Minimum Rating</InputLabel>
                 <Select
@@ -125,9 +125,9 @@ export default function SearchFilters({ searchType, onFiltersChange }) {
                   <MenuItem value="9">9.0+</MenuItem>
                 </Select>
               </FormControl>
-            </Grid>
+            </Grid2>
 
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid2 xs={12} sm={6} md={3}>
               <FormControl fullWidth>
                 <InputLabel>Sort By</InputLabel>
                 <Select
@@ -142,10 +142,10 @@ export default function SearchFilters({ searchType, onFiltersChange }) {
                   <MenuItem value="title">Title</MenuItem>
                 </Select>
               </FormControl>
-            </Grid>
+            </Grid2>
 
             {hasActiveFilters && (
-              <Grid item xs={12}>
+              <Grid2 xs={12}>
                 <Button
                   startIcon={<Clear />}
                   onClick={clearFilters}
@@ -154,9 +154,9 @@ export default function SearchFilters({ searchType, onFiltersChange }) {
                 >
                   Clear All Filters
                 </Button>
-              </Grid>
+              </Grid2>
             )}
-          </Grid>
+          </Grid2>
         </AccordionDetails>
       </Accordion>
     </Box>

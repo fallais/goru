@@ -7,7 +7,7 @@ import {
   Card,
   CardContent,
   CardActions,
-  Grid,
+  Grid2,
   Chip,
   Dialog,
   DialogTitle,
@@ -196,8 +196,8 @@ function State() {
       </Box>
 
       {/* Summary Cards */}
-      <Grid container spacing={3} mb={4}>
-        <Grid item xs={12} sm={4}>
+      <Grid2 container spacing={3} mb={4}>
+        <Grid2 xs={12} sm={4}>
           <Card>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>
@@ -208,8 +208,8 @@ function State() {
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
+        </Grid2>
+        <Grid2 xs={12} sm={4}>
           <Card>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>
@@ -220,8 +220,8 @@ function State() {
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
+        </Grid2>
+        <Grid2 xs={12} sm={4}>
           <Card>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>
@@ -232,8 +232,8 @@ function State() {
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
-      </Grid>
+        </Grid2>
+      </Grid2>
 
       {/* Operations List */}
       <Paper sx={{ p: 0 }}>

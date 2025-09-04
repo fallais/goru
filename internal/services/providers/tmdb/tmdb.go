@@ -94,6 +94,27 @@ func (d *tmdbProvider) GetMovie(title string, year int) (*models.Movie, error) {
 	return movies[0], nil
 }
 
+func (d *tmdbProvider) GetMovieByID(id string) (*models.Movie, error) {
+	d.rateLimiter.Wait()
+
+	parsedID, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid movie ID: %w", err)
+	}
+
+	resp, err := d.client.GetMovieDetails(parsedID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("TMDB movie get failed: %w", err)
+	}
+
+	movie, err := tmdbMovieDetailsToModel(resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert TMDB movie to model: %w", err)
+	}
+
+	return movie, nil
+}
+
 // SearchMovie searches for movies by title with improved matching
 func (d *tmdbProvider) SearchMovies(title string, year int) ([]*models.Movie, error) {
 	d.rateLimiter.Wait()
@@ -148,6 +169,27 @@ func (d *tmdbProvider) GetTVShow(name string, year int) (*models.TVShow, error) 
 		return nil, providers.ErrNoTVShowsFound
 	}
 	return tvShows[0], nil
+}
+
+func (d *tmdbProvider) GetTVShowByID(id string) (*models.TVShow, error) {
+	d.rateLimiter.Wait()
+
+	parsedID, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid TV show ID: %w", err)
+	}
+
+	resp, err := d.client.GetTVDetails(parsedID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("TMDB TV show get failed: %w", err)
+	}
+
+	tvshow, err := tmdbShowDetailsToModel(resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert TMDB TV show to model: %w", err)
+	}
+
+	return tvshow, nil
 }
 
 // SearchTVShow searches for TV shows by name with improved matching

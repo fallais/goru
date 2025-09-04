@@ -12,6 +12,7 @@ export default async function handler(req, res) {
     }
 
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:8080';
+    
     let results = [];
 
     // Handle different search types
@@ -51,7 +52,7 @@ async function searchMovies(backendUrl, query, year) {
       searchParams.append('year', year.toString());
     }
     
-    const response = await fetch(`${backendUrl}/api/search/movies?${searchParams}`, {
+    const response = await fetch(`${backendUrl}/api/movies?${searchParams}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -63,8 +64,8 @@ async function searchMovies(backendUrl, query, year) {
     }
     
     const data = await response.json();
-    // Add type identifier to results
-    return (data.results || data || []).map(item => ({
+    // Add type identifier to results - data.movies contains the movie array
+    return (data.movies || []).map(item => ({
       ...item,
       type: 'movie'
     }));
@@ -81,20 +82,26 @@ async function searchTVShows(backendUrl, query, year) {
       searchParams.append('year', year.toString());
     }
     
-    const response = await fetch(`${backendUrl}/api/search/tvshows?${searchParams}`, {
+    const url = `${backendUrl}/api/tvshows?${searchParams}`;
+    console.log('Calling TV shows API:', url);
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
     });
     
+    console.log('TV shows API response status:', response.status);
+    
     if (!response.ok) {
       throw new Error(`TV shows search failed with ${response.status}`);
     }
     
     const data = await response.json();
-    // Add type identifier to results
-    return (data.results || data || []).map(item => ({
+    console.log('TV shows API response data:', data);
+    // Add type identifier to results - data.tvshows contains the TV show array
+    return (data.tvshows || []).map(item => ({
       ...item,
       type: 'tv'
     }));

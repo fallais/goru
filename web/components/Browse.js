@@ -1,5 +1,5 @@
 
-import { Box, Grid } from '@mui/material';
+import { Box, Grid2 } from '@mui/material';
 import {
   DirectoryBreadcrumbs,
   FileList,
@@ -26,7 +26,6 @@ function Browse({ searchPath }) {
     handleDirectoryClick,
     handleParentDirectory,
     handleLookup,
-    handleEditLookup,
     handleApply,
     handleFileClick,
     handleCloseModal,
@@ -56,8 +55,8 @@ function Browse({ searchPath }) {
         planExists={plan && plan.changes && plan.changes.length > 0}
       />
       
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+      <Grid2 container spacing={2}>
+        <Grid2 size={{ xs: 12, md: 6 }}>
           <FileList
             files={files}
             plan={plan}
@@ -69,9 +68,9 @@ function Browse({ searchPath }) {
             onFileHover={handleFileHover}
             onFileHoverLeave={handleFileHoverLeave}
           />
-        </Grid>
+        </Grid2>
         
-        <Grid item xs={12} md={6}>
+        <Grid2 size={{ xs: 12, md: 6 }}>
           <ResultsPanel
             plan={plan}
             loading={loading}
@@ -79,8 +78,8 @@ function Browse({ searchPath }) {
             onPlanResultHover={handlePlanResultHover}
             onPlanResultHoverLeave={handlePlanResultHoverLeave}
           />
-        </Grid>
-      </Grid>
+        </Grid2>
+      </Grid2>
       
       <FileInfoModal
         open={modalOpen}

@@ -9,9 +9,11 @@ import (
 
 type Provider interface {
 	GetMovie(title string, year int) (*models.Movie, error)
+	GetMovieByID(id string) (*models.Movie, error)
 	SearchMovies(title string, year int) ([]*models.Movie, error)
 
 	GetTVShow(title string, year int) (*models.TVShow, error)
+	GetTVShowByID(id string) (*models.TVShow, error)
 	SearchTVShows(title string, year int) ([]*models.TVShow, error)
 
 	GetEpisode(showID, season, episode int) (*models.Episode, error)

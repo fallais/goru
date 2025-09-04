@@ -4,7 +4,7 @@ import {
   Box,
   TextField,
   Button,
-  Grid,
+  Grid2,
   Typography,
   InputAdornment,
   Chip,
@@ -41,15 +41,37 @@ export default function Search({ searchType = 'all' }) {
     setCurrentPage(1);
 
     try {
-      const response = await fetch(`/api/search?type=${searchType}&query=${encodeURIComponent(searchQuery)}`);
+      let endpoint;
+      // Map search type to correct backend endpoint
+      if (searchType === 'movies' || searchType === 'movie') {
+        endpoint = '/api/movies';
+      } else if (searchType === 'tv' || searchType === 'tvshows') {
+        endpoint = '/api/tvshows';
+      } else {
+        // For 'all' type, we'll search both movies and TV shows
+        // For now, default to movies, but this could be enhanced to search both
+        endpoint = '/api/movies';
+      }
+
+      const response = await fetch(`${endpoint}?query=${encodeURIComponent(searchQuery)}`);
       
       if (!response.ok) {
         throw new Error('Search failed');
       }
 
       const data = await response.json();
-      setSearchResults(data.results || []);
-      setFilteredResults(data.results || []);
+      // Handle different response structures from backend
+      let results = [];
+      if (searchType === 'movies' || searchType === 'movie') {
+        results = data.movies || [];
+      } else if (searchType === 'tv' || searchType === 'tvshows') {
+        results = data.tvshows || [];
+      } else {
+        // For 'all' type
+        results = data.movies || data.tvshows || data.results || [];
+      }
+      setSearchResults(results);
+      setFilteredResults(results);
     } catch (err) {
       setError(err.message);
       setSearchResults([]);
@@ -253,18 +275,18 @@ export default function Search({ searchType = 'all' }) {
       {/* Search Results */}
       {currentResults.length > 0 && (
         <Box>
-          <Grid container spacing={2}>
+          <Grid2 container spacing={2}>
             {currentResults.map((result, index) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={startIndex + index}>
+              <Grid2 xs={12} sm={6} md={4} lg={3} key={startIndex + index}>
                 <SearchResultCard
                   result={result}
                   onView={handleViewDetails}
                   onDownload={handleDownload}
                   onViewEpisodes={handleViewEpisodes}
                 />
-              </Grid>
+              </Grid2>
             ))}
-          </Grid>
+          </Grid2>
 
           {/* Pagination */}
           {totalPages > 1 && (

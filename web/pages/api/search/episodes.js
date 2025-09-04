@@ -1,25 +1,25 @@
-// Proxy for movie search API
+// Proxy for episode search API
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { query, year } = req.query;
+    const { tvshow_id, season } = req.query;
     
-    if (!query || !query.trim()) {
-      return res.status(400).json({ error: 'Query parameter is required' });
+    if (!tvshow_id) {
+      return res.status(400).json({ error: 'tvshow_id parameter is required' });
     }
 
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:8080';
     
-    // Build URL with query parameters
-    const searchParams = new URLSearchParams({ query });
-    if (year) {
-      searchParams.append('year', year.toString());
+    // Build query string
+    const queryParams = new URLSearchParams({ tvshow_id });
+    if (season) {
+      queryParams.append('season', season);
     }
     
-    const response = await fetch(`${backendUrl}/api/movies?${searchParams}`, {
+    const response = await fetch(`${backendUrl}/api/episodes?${queryParams}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     const data = await response.json();
     res.status(200).json(data);
   } catch (error) {
-    console.error('Error proxying movie search request:', error);
-    res.status(500).json({ error: 'Failed to search movies' });
+    console.error('Error proxying episode search request:', error);
+    res.status(500).json({ error: 'Failed to search episodes' });
   }
 }

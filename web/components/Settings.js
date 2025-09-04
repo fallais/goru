@@ -9,7 +9,7 @@ import {
   MenuItem,
   FormControlLabel,
   Checkbox,
-  Grid,
+  Grid2,
   Button,
   Alert,
   Divider,
@@ -50,8 +50,8 @@ function Settings() {
           Media Detection Settings
         </Typography>
         
-        <Grid container spacing={3} sx={{ mt: 1 }}>
-          <Grid item xs={12} sm={6}>
+        <Grid2 container spacing={3} sx={{ mt: 1 }}>
+          <Grid2 xs={12} sm={6}>
             <FormControl fullWidth>
               <InputLabel>Default Media Type</InputLabel>
               <Select
@@ -64,9 +64,9 @@ function Settings() {
                 <MenuItem value="tv">TV Show</MenuItem>
               </Select>
             </FormControl>
-          </Grid>
+          </Grid2>
           
-          <Grid item xs={12} sm={6}>
+          <Grid2 xs={12} sm={6}>
             <FormControl fullWidth>
               <InputLabel>Provider</InputLabel>
               <Select
@@ -77,8 +77,8 @@ function Settings() {
                 <MenuItem value="tmdb">TMDB</MenuItem>
               </Select>
             </FormControl>
-          </Grid>
-        </Grid>
+          </Grid2>
+        </Grid2>
         
         <Divider sx={{ my: 3 }} />
         
@@ -86,8 +86,8 @@ function Settings() {
           Scanning Options
         </Typography>
         
-        <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid item xs={12} sm={6}>
+        <Grid2 container spacing={2} sx={{ mt: 1 }}>
+          <Grid2 xs={12} sm={6}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -97,9 +97,9 @@ function Settings() {
               }
               label="Scan subdirectories recursively"
             />
-          </Grid>
+          </Grid2>
           
-          <Grid item xs={12} sm={6}>
+          <Grid2 xs={12} sm={6}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -109,9 +109,9 @@ function Settings() {
               }
               label="Auto-scan when entering directories"
             />
-          </Grid>
+          </Grid2>
           
-          <Grid item xs={12} sm={6}>
+          <Grid2 xs={12} sm={6}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -121,9 +121,9 @@ function Settings() {
               }
               label="Show hidden files"
             />
-          </Grid>
+          </Grid2>
           
-          <Grid item xs={12} sm={6}>
+          <Grid2 xs={12} sm={6}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -133,8 +133,8 @@ function Settings() {
               }
               label="Confirm before renaming files"
             />
-          </Grid>
-        </Grid>
+          </Grid2>
+        </Grid2>
         
         <Box sx={{ mt: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
           <Button

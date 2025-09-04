@@ -5,6 +5,8 @@ import (
 	"goru/internal/models"
 	"strconv"
 	"time"
+
+	tmdb "github.com/cyruzin/golang-tmdb"
 )
 
 type TMDBMovie struct {
@@ -75,6 +77,30 @@ type TMDBEpisode struct {
 
 func tmdbMovieToModel(tmdbMovie TMDBMovie) (*models.Movie, error) {
 	movieModel := &models.Movie{
+		ID:            strconv.FormatInt(tmdbMovie.ID, 10),
+		Title:         tmdbMovie.Title,
+		OriginalTitle: tmdbMovie.OriginalTitle,
+		ExternalIDs: models.ExternalIDs{
+			TMDBID: strconv.FormatInt(tmdbMovie.ID, 10),
+		},
+	}
+
+	// Extract year from release date
+	if tmdbMovie.ReleaseDate != "" {
+		date, err := time.Parse("2006-01-02", tmdbMovie.ReleaseDate)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse release date: %w", err)
+		}
+
+		movieModel.ReleaseDate = date
+	}
+
+	return movieModel, nil
+}
+
+func tmdbMovieDetailsToModel(tmdbMovie *tmdb.MovieDetails) (*models.Movie, error) {
+	movieModel := &models.Movie{
+		ID:            strconv.FormatInt(tmdbMovie.ID, 10),
 		Title:         tmdbMovie.Title,
 		OriginalTitle: tmdbMovie.OriginalTitle,
 		ExternalIDs: models.ExternalIDs{
@@ -97,6 +123,30 @@ func tmdbMovieToModel(tmdbMovie TMDBMovie) (*models.Movie, error) {
 
 func tmdbShowToModel(tmdbShow TMDBTVShow) (*models.TVShow, error) {
 	tvShowModel := &models.TVShow{
+		ID:           strconv.FormatInt(tmdbShow.ID, 10),
+		Name:         tmdbShow.Name,
+		OriginalName: tmdbShow.OriginalName,
+		ExternalIDs: models.ExternalIDs{
+			TMDBID: strconv.FormatInt(tmdbShow.ID, 10),
+		},
+	}
+
+	// Extract first air date
+	if tmdbShow.FirstAirDate != "" {
+		date, err := time.Parse("2006-01-02", tmdbShow.FirstAirDate)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse first air date: %w", err)
+		}
+
+		tvShowModel.FirstAirDate = date
+	}
+
+	return tvShowModel, nil
+}
+
+func tmdbShowDetailsToModel(tmdbShow *tmdb.TVDetails) (*models.TVShow, error) {
+	tvShowModel := &models.TVShow{
+		ID:           strconv.FormatInt(tmdbShow.ID, 10),
 		Name:         tmdbShow.Name,
 		OriginalName: tmdbShow.OriginalName,
 		ExternalIDs: models.ExternalIDs{

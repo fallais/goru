@@ -6,39 +6,18 @@ import (
 	"strconv"
 
 	"goru/internal/models"
-	"goru/internal/services/providers"
 	"goru/pkg/log"
 
 	"go.uber.org/zap"
 )
 
-// MovieSearchRequest represents a movie search request
-type MovieSearchRequest struct {
-	Query string `json:"query"`
-	Year  int    `json:"year,omitempty"`
-}
-
 // MovieSearchResponse represents the response from movie search
 type MovieSearchResponse struct {
-	Results []*models.Movie `json:"results"`
-	Status  string          `json:"status"`
-	Error   string          `json:"error,omitempty"`
-}
-
-// MovieSearchHandler handles movie search requests
-type MovieSearchHandler struct {
-	provider providers.Provider
-}
-
-// NewMovieSearchHandler creates a new movie search handler
-func NewMovieSearchHandler(provider providers.Provider) MovieSearchHandler {
-	return MovieSearchHandler{
-		provider: provider,
-	}
+	Movies []*models.Movie `json:"movies"`
 }
 
 // Search handles movie search requests
-func (h *MovieSearchHandler) Search(w http.ResponseWriter, r *http.Request) {
+func (h *MovieHandler) Search(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("query")
 	if query == "" {
 		writeError(w, "query parameter is required", http.StatusBadRequest)
@@ -63,8 +42,7 @@ func (h *MovieSearchHandler) Search(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := MovieSearchResponse{
-		Results: movies,
-		Status:  "success",
+		Movies: movies,
 	}
 
 	writeJSON(w, response)

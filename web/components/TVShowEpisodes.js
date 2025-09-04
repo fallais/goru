@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Grid,
+  Grid2,
   Typography,
   CircularProgress,
   Alert,
@@ -43,18 +43,19 @@ export default function TVShowEpisodes({ showId, showData }) {
       setLoading(true);
       setError(null);
 
+      // Use the new unified endpoint for getting TV show episodes
       const response = await fetch(`/api/tv-shows/${showId}/episodes`);
-      
       if (!response.ok) {
         throw new Error('Failed to fetch episodes');
       }
 
       const data = await response.json();
-      setEpisodes(data.episodes || []);
+      const allEpisodes = data.episodes || [];
       
-      // Extract unique seasons
-      const uniqueSeasons = [...new Set((data.episodes || []).map(ep => ep.season_number))].sort((a, b) => a - b);
+      // Extract unique seasons from episodes
+      const uniqueSeasons = [...new Set(allEpisodes.map(ep => ep.season_number))].sort((a, b) => a - b);
       setSeasons(uniqueSeasons);
+      setEpisodes(allEpisodes);
 
     } catch (err) {
       setError(err.message);
@@ -182,17 +183,17 @@ export default function TVShowEpisodes({ showId, showData }) {
 
       {/* Episodes Grid */}
       {filteredEpisodes.length > 0 ? (
-        <Grid container spacing={2}>
+        <Grid2 container spacing={2}>
           {filteredEpisodes.map((episode, index) => (
-            <Grid item xs={12} sm={6} md={4} key={`${episode.season_number}-${episode.episode_number}`}>
+            <Grid2 xs={12} sm={6} md={4} key={`${episode.season_number}-${episode.episode_number}`}>
               <EpisodeCard
                 episode={episode}
                 onDownload={handleDownloadEpisode}
                 onViewDetails={handleViewEpisodeDetails}
               />
-            </Grid>
+            </Grid2>
           ))}
-        </Grid>
+        </Grid2>
       ) : (
         <Box sx={{ textAlign: 'center', mt: 4 }}>
           <Typography variant="h6" color="text.secondary">
