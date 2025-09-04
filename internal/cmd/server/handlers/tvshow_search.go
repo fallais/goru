@@ -14,8 +14,6 @@ import (
 // TVShowSearchResponse represents the response from TV show search
 type TVShowSearchResponse struct {
 	TVShows []*models.TVShow `json:"tvshows"`
-	Status  string           `json:"status"`
-	Error   string           `json:"error,omitempty"`
 }
 
 func (h *TVShowHandler) Search(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +44,6 @@ func (h *TVShowHandler) Search(w http.ResponseWriter, r *http.Request) {
 
 	response := TVShowSearchResponse{
 		TVShows: tvshows,
-		Status:  "success",
 	}
 
 	writeJSON(w, response)

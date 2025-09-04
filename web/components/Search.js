@@ -21,6 +21,7 @@ import {
 } from '@mui/icons-material';
 import SearchResultCard from './search/SearchResultCard';
 import SearchFilters from './search/SearchFilters';
+import { searchMovies, searchTVShows } from '../lib/api';
 
 export default function Search({ searchType = 'all' }) {
   const router = useRouter();
@@ -41,39 +42,26 @@ export default function Search({ searchType = 'all' }) {
     setCurrentPage(1);
 
     try {
-      let endpoint;
-      // Map search type to correct backend endpoint
-      if (searchType === 'movies' || searchType === 'movie') {
-        endpoint = '/api/movies';
-      } else if (searchType === 'tv' || searchType === 'tvshows') {
-        endpoint = '/api/tvshows';
-      } else {
-        // For 'all' type, we'll search both movies and TV shows
-        // For now, default to movies, but this could be enhanced to search both
-        endpoint = '/api/movies';
-      }
-
-      const response = await fetch(`${endpoint}?query=${encodeURIComponent(searchQuery)}`);
-      
-      if (!response.ok) {
-        throw new Error('Search failed');
-      }
-
-      const data = await response.json();
-      // Handle different response structures from backend
       let results = [];
+      
+      // Use the new API functions instead of fetch
       if (searchType === 'movies' || searchType === 'movie') {
-        results = data.movies || [];
+        const data = await searchMovies(searchQuery);
+        results = data.movies || data.results || [];
       } else if (searchType === 'tv' || searchType === 'tvshows') {
-        results = data.tvshows || [];
+        const data = await searchTVShows(searchQuery);
+        results = data.tvshows || data.results || [];
       } else {
-        // For 'all' type
-        results = data.movies || data.tvshows || data.results || [];
+        // For 'all' type, search movies (could be enhanced to search both)
+        const data = await searchMovies(searchQuery);
+        results = data.movies || data.results || [];
       }
+      
       setSearchResults(results);
       setFilteredResults(results);
     } catch (err) {
-      setError(err.message);
+      console.error('Search failed:', err);
+      setError(err.message || 'Search failed');
       setSearchResults([]);
       setFilteredResults([]);
     } finally {

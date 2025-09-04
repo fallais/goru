@@ -18,20 +18,16 @@ import {
   Search,
   Settings as SettingsIcon,
   FolderOpen,
-  FindInPage,
   History,
   ArrowDropDown,
   Movie,
   Tv,
 } from '@mui/icons-material';
 import { CacheProvider } from '@emotion/react';
-import createEmotionCache from '../lib/createEmotionCache';
 import { useRouter } from 'next/router';
 import { NotificationProvider, useNotification } from '../contexts/NotificationContext';
 import { DirectoryProvider } from '../contexts/DirectoryContext';
 import NotificationSnackbar from '../components/NotificationSnackbar';
-import AxiosSetup from '../components/AxiosSetup';
-import { setupAxiosInterceptors } from '../lib/axios';
 
 const theme = createTheme({
   palette: {
@@ -41,11 +37,8 @@ const theme = createTheme({
   },
 });
 
-// Client-side cache, shared for the whole session of the user in the browser.
-const clientSideEmotionCache = createEmotionCache();
-
 export default function MyApp(props) {
-  const { Component, emotionCache = clientSideEmotionCache, pageProps } = props;
+  const { Component, pageProps } = props;
   const router = useRouter();
   const [searchPath, setSearchPath] = useState('');
   const [searchAnchorEl, setSearchAnchorEl] = useState(null);
@@ -67,20 +60,11 @@ export default function MyApp(props) {
     handleSearchClose();
   };
 
-  const handleSearchKeyPress = (e) => {
-    if (e.key === 'Enter' && searchPath.trim()) {
-      // Navigate to browse page with search path as query parameter
-      router.push(`/?path=${encodeURIComponent(searchPath.trim())}`);
-    }
-  };
-
   return (
-    <CacheProvider value={emotionCache}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <NotificationProvider>
           <DirectoryProvider>
-            <AxiosSetup />
           <AppBar position="static">
             <Toolbar>
               <Typography variant="h6" component="div" sx={{ mr: 4 }}>
@@ -156,6 +140,5 @@ export default function MyApp(props) {
         </DirectoryProvider>
         </NotificationProvider>
       </ThemeProvider>
-    </CacheProvider>
   );
 }

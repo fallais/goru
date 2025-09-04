@@ -3,8 +3,6 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 
 	"goru/internal/cmd/server/handlers"
 	"goru/internal/models"
@@ -13,6 +11,7 @@ import (
 	"goru/internal/services/providers/tmdb"
 	"goru/pkg/log"
 
+	ghandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -79,22 +78,17 @@ func Run(cmd *cobra.Command, args []string) {
 
 	api.HandleFunc("/health", healthHandler.Health).Methods("GET")
 
-	// Serve static files from web directory
-	webDir := filepath.Join(".", "web", "build")
-	if _, err := os.Stat(webDir); os.IsNotExist(err) {
-		log.Warn("Web build directory not found, serving from development location", zap.String("dir", webDir))
-		webDir = filepath.Join(".", "web", "public")
-	}
-
-	// Static file server
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir(webDir)))
+	// Allowed origins (your frontend)
+	allowedOrigins := ghandlers.AllowedOrigins([]string{"http://localhost:3000"})
+	allowedMethods := ghandlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
+	allowedHeaders := ghandlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
 
 	// Start server
 	address := fmt.Sprintf("%s:%s", viper.GetString("host"), viper.GetString("port"))
 	log.Info("Server starting", zap.String("address", address))
 	log.Info("Open your browser to", zap.String("url", fmt.Sprintf("http://%s", address)))
 
-	if err := http.ListenAndServe(address, router); err != nil {
+	if err := http.ListenAndServe(address, ghandlers.CORS(allowedOrigins, allowedMethods, allowedHeaders)(router)); err != nil {
 		log.Fatal("Server failed to start", zap.Error(err))
 	}
 }

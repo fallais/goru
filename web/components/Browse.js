@@ -7,7 +7,7 @@ import {
   ActionsPanel,
   ResultsPanel,
 } from './browse/index';
-import { useBrowseLogic } from '../hooks/useBrowseLogic';
+import { useBrowseLogic } from '../features/browse/hooks';
 
 function Browse({ searchPath }) {
   const {

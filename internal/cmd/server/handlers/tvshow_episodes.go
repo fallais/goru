@@ -15,8 +15,6 @@ import (
 // EpisodeSearchResponse represents the response from episode search
 type EpisodeSearchResponse struct {
 	Episodes []*models.Episode `json:"episodes"`
-	Status   string            `json:"status"`
-	Error    string            `json:"error,omitempty"`
 }
 
 func (h *TVShowHandler) ListEpisodes(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +48,6 @@ func (h *TVShowHandler) ListEpisodes(w http.ResponseWriter, r *http.Request) {
 
 	response := EpisodeSearchResponse{
 		Episodes: episodes,
-		Status:   "success",
 	}
 
 	writeJSON(w, response)

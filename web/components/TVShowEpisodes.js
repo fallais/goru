@@ -18,6 +18,7 @@ import {
 } from '@mui/icons-material';
 import EpisodeCard from './episodes/EpisodeCard';
 import EpisodeFilters from './episodes/EpisodeFilters';
+import { getTVShowEpisodes } from '../lib/api';
 
 export default function TVShowEpisodes({ showId, showData }) {
   const [episodes, setEpisodes] = useState([]);
@@ -43,14 +44,9 @@ export default function TVShowEpisodes({ showId, showData }) {
       setLoading(true);
       setError(null);
 
-      // Use the new unified endpoint for getting TV show episodes
-      const response = await fetch(`/api/tv-shows/${showId}/episodes`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch episodes');
-      }
-
-      const data = await response.json();
-      const allEpisodes = data.episodes || [];
+      // Use the new API function for getting TV show episodes
+      const data = await getTVShowEpisodes(showId);
+      const allEpisodes = data.episodes || data || [];
       
       // Extract unique seasons from episodes
       const uniqueSeasons = [...new Set(allEpisodes.map(ep => ep.season_number))].sort((a, b) => a - b);
@@ -58,7 +54,8 @@ export default function TVShowEpisodes({ showId, showData }) {
       setEpisodes(allEpisodes);
 
     } catch (err) {
-      setError(err.message);
+      console.error('Failed to fetch episodes:', err);
+      setError(err.message || 'Failed to fetch episodes');
       setEpisodes([]);
     } finally {
       setLoading(false);

@@ -37,7 +37,7 @@ import {
   Delete,
   Warning,
 } from '@mui/icons-material';
-import { useApiCall } from '../hooks/useApiCall';
+import { getState, revertState } from '../lib/api';
 
 function State() {
   const [state, setState] = useState(null);
@@ -47,22 +47,19 @@ function State() {
   const [revertMode, setRevertMode] = useState('last'); // 'last', 'all', 'id'
   const [selectedEntryId, setSelectedEntryId] = useState('');
   const [reverting, setReverting] = useState(false);
-  const { get, post } = useApiCall();
 
   const fetchState = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    if (activeOnly) {
-      params.append('active', 'true');
+    
+    try {
+      const data = await getState({ 
+        active: activeOnly ? true : undefined 
+      });
+      setState(data);
+    } catch (error) {
+      console.error('Failed to fetch state:', error);
     }
     
-    const result = await get(`/api/state?${params.toString()}`, {
-      errorPrefix: 'Failed to fetch state'
-    });
-    
-    if (result.success) {
-      setState(result.data);
-    }
     setLoading(false);
   };
 
@@ -73,24 +70,14 @@ function State() {
   const handleRevert = async () => {
     setReverting(true);
     
-    let revertData = {};
-    if (revertMode === 'last') {
-      revertData = { last: true };
-    } else if (revertMode === 'all') {
-      revertData = { all: true };
-    } else if (revertMode === 'id' && selectedEntryId) {
-      revertData = { id: selectedEntryId };
-    }
-    
-    const result = await post('/api/state/revert', revertData, {
-      errorPrefix: 'Failed to revert',
-      successMessage: 'Revert operation completed',
-      showSuccessNotification: true
-    });
-    
-    if (result.success) {
+    try {
+      const result = await revertState();
+      console.log('Revert operation completed:', result);
+      
       setRevertDialogOpen(false);
       fetchState(); // Refresh the state
+    } catch (error) {
+      console.error('Failed to revert:', error);
     }
     
     setReverting(false);
