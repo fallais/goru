@@ -1,10 +1,11 @@
 package models
 
 // MediaType represents the type of media (movie, tv show, etc.)
-type MediaType string
+type MediaType int
 
 const (
-	MediaTypeMovie  MediaType = "movie"
-	MediaTypeTVShow MediaType = "tv"
-	MediaTypeAnime  MediaType = "anime"
+	MediaTypeMovie MediaType = iota
+	MediaTypeTVShow
+	MediaTypeAnime
+	MediaTypeUnknown
 )

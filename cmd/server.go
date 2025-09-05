@@ -19,12 +19,15 @@ func init() {
 	serverCmd.Flags().String("port", "", "Port to run the server on")
 	serverCmd.Flags().String("host", "", "Host to bind the server to")
 	serverCmd.Flags().String("directory", "", "Default directory to scan")
+	serverCmd.Flags().String("db_file", "", "Path to the database file")
 
 	viper.BindPFlag("host", serverCmd.Flags().Lookup("host"))
 	viper.BindPFlag("port", serverCmd.Flags().Lookup("port"))
 	viper.BindPFlag("directory", serverCmd.Flags().Lookup("directory"))
+	viper.BindPFlag("db_file", serverCmd.Flags().Lookup("db_file"))
 
 	viper.SetDefault("host", "localhost")
 	viper.SetDefault("port", "8080")
 	viper.SetDefault("directory", ".")
+	viper.SetDefault("db_file", "files.db")
 }

@@ -8,7 +8,9 @@ import (
 	"goru/internal/models"
 	"goru/internal/services/files"
 	"goru/internal/services/formatters"
+	"goru/internal/services/providers"
 	"goru/internal/services/providers/tmdb"
+	"goru/internal/services/watcher"
 	"goru/pkg/log"
 
 	ghandlers "github.com/gorilla/handlers"
@@ -39,6 +41,13 @@ func Run(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatal("failed to create TMDB provider", zap.Error(err))
 	}
+
+	// Create watcher
+	watcher, err := watcher.New(viper.GetString("db_file"), []providers.Provider{tmdbProvider})
+	if err != nil {
+		log.Fatal("failed to create watcher", zap.Error(err))
+	}
+	go watcher.Start()
 
 	// Create handlers
 	planHandler := handlers.NewPlanHandler(fileService, formatterService)

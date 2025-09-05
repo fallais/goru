@@ -21,6 +21,8 @@ type Provider interface {
 
 	// Provide video file with metadata information coming from the Internet
 	Provide(file *models.VideoFile) error
+
+	Name() string
 }
 
 // ExtractYear tries to extract a year from a filename

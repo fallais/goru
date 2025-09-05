@@ -6,6 +6,12 @@ import (
 	"github.com/google/uuid"
 )
 
+type ExternalIDs struct {
+	TMDBID  string `json:"tmdb_id"`
+	TVDBID  string `json:"tvdb_id"`
+	AniDBID string `json:"anidb_id"`
+}
+
 // VideoFile represents a video file.
 type VideoFile struct {
 	ID       string   `json:"id"`
@@ -20,17 +26,20 @@ type VideoFile struct {
 	Metadata any `json:"metadata"`
 
 	ConflictStrategy ConflictStrategy `json:"conflict_strategy"`
+
+	ExternalIDs ExternalIDs `json:"external_ids"`
 }
 
-func NewVideoFile(path string, fileType FileType, mediaType MediaType, cs ConflictStrategy) *VideoFile {
-	return &VideoFile{
+func NewVideoFile(path string, cs ConflictStrategy) *VideoFile {
+	vf := &VideoFile{
 		ID:               uuid.New().String(),
 		Path:             path,
 		Filename:         filepath.Base(path),
-		FileType:         fileType,
-		MediaType:        mediaType,
 		ConflictStrategy: cs,
 	}
+
+	vf.MediaType = GuessMediaType(vf.Filename)
+	return vf
 }
 
 func (vf *VideoFile) GetID() string {
@@ -59,4 +68,14 @@ func (vf *VideoFile) GetID() string {
 	}
 
 	return vf.ID
+}
+
+func (vf *VideoFile) GetFileType() FileType {
+	return GetFileTypeFromExtension(filepath.Ext(vf.Filename))
+}
+
+// IsLookupUp checks if any external IDs are set for the video file.
+// If yes, the video file has metadata.
+func (vf *VideoFile) IsLookupUp() bool {
+	return vf.ExternalIDs.TMDBID != "" || vf.ExternalIDs.TVDBID != "" || vf.ExternalIDs.AniDBID != ""
 }

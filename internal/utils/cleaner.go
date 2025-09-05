@@ -1,127 +1,121 @@
 package utils
 
 import (
+	"goru/internal/models"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
 
-// removeLanguageTags removes language-related tags from filename
-func removeLanguageTags(title string) string {
-	title = strings.ToLower(title)
+func CleanFilename(filename string, mediaType models.MediaType) string {
+	// Remove extension
+	filename = strings.TrimSuffix(filename, filepath.Ext(filename))
 
-	languageTags := []string{
-		"multi", "vff", "vfq", "vf", "vo", "vost", "vostfr", "french", "english",
-		"german", "spanish", "italian", "portuguese", "russian", "japanese",
-		"chinese", "korean", "arabic", "hindi", "truefrench", "fastsub",
+	// Lowercase
+	filename = strings.ToLower(filename)
+
+	switch mediaType {
+	case models.MediaTypeMovie:
+		return cleanTitleMovie(filename)
+	case models.MediaTypeTVShow:
+		return cleanTitleTVShow(filename)
 	}
 
-	for _, tag := range languageTags {
-		title = strings.ReplaceAll(title, tag, " ")
-	}
-
-	return title
+	return ""
 }
 
-// removeQualityTags removes quality and format-related tags from filename
-func removeQualityTags(title string) string {
-	title = strings.ToLower(title)
-
-	qualityTags := []string{
-		"1080p", "720p", "480p", "4k", "2160p", "hd", "uhd", "fhd",
-		"bluray", "webrip", "dvdrip", "bdrip", "hdrip", "tvrip", "web", "dl",
-		"x264", "x265", "h264", "h265", "xvid", "divx", "hevc", "avc",
-		"dd5.1", "dts", "ac3", "aac", "mp3", "flac", "atmos", "truehd",
-		"internal", "proper", "repack", "extended", "unrated", "dc",
-		"directors.cut", "final.cut", "theatrical", "imax", "final",
-		"amzn", "nf", "hulu", "max", "dsnp", "atvp", "pmtp", "pcok",
+func cleanTitleTVShow(filename string) string {
+	// Try to find season/episode pattern first
+	reSeasonEp := regexp.MustCompile(`(?i)(s\d{1,2}e\d{1,2}|\d{1,2}x\d{1,3})`)
+	loc := reSeasonEp.FindStringIndex(filename)
+	if loc != nil {
+		// Keep only the part before the season/episode pattern
+		name := filename[:loc[0]]
+		// Normalize separators
+		name = strings.NewReplacer(".", " ", "_", " ", "-", " ").Replace(name)
+		// Cleanup
+		words := strings.Fields(name)
+		return strings.Join(words, " ")
 	}
 
-	for _, tag := range qualityTags {
-		title = strings.ReplaceAll(title, tag, " ")
+	// Fallback deep search cleaning
+
+	// Remove " copy" suffix from duplicated files
+	filename = regexp.MustCompile(`\s*copy(\s*\(\d+\))?$`).ReplaceAllString(filename, "")
+
+	// Remove episode info
+	filename = regexp.MustCompile(`\bs\d{1,2}e\d{1,2}\b`).ReplaceAllString(filename, " ")
+	filename = regexp.MustCompile(`\b\d{1,2}x\d{1,3}\b`).ReplaceAllString(filename, " ")
+
+	// Remove resolution
+	filename = regexp.MustCompile(`\b\d{3,4}p\b`).ReplaceAllString(filename, " ")
+
+	// Remove codecs
+	filename = regexp.MustCompile(`\b(x|h)\d{3}\b`).ReplaceAllString(filename, " ")
+
+	// Remove audio
+	filename = regexp.MustCompile(`\bddp?\d?(\.\d)?\b`).ReplaceAllString(filename, " ")
+	filename = regexp.MustCompile(`\bdts\b|\bac3\b|\baac\b|\bmp3\b|\bflac\b`).ReplaceAllString(filename, " ")
+
+	// Remove provider acronyms
+	filename = regexp.MustCompile(`\b[a-z]{2,5}\b`).ReplaceAllString(filename, " ")
+
+	// Remove extra release tags
+	extraTags := []string{
+		"final", "proper", "repack", "internal", "limited", "festival",
+		"extended", "unrated", "remastered", "criterion",
+	}
+	for _, tag := range extraTags {
+		filename = strings.ReplaceAll(filename, tag, " ")
 	}
 
-	return title
+	// Remove release group suffix like "-IMMERSE"
+	filename = regexp.MustCompile(`[-._][a-z0-9]{2,}$`).ReplaceAllString(filename, " ")
+
+	// Normalize separators
+	filename = strings.NewReplacer(".", " ", "_", " ", "-", " ").Replace(filename)
+
+	// Remove brackets
+	filename = regexp.MustCompile(`\[.*?\]|\(.*?\)|\{.*?\}`).ReplaceAllString(filename, " ")
+
+	// Cleanup
+	words := strings.Fields(filename)
+	return strings.Join(words, " ")
 }
 
-// removeEpisodeInfo removes season/episode information from filename
-func removeEpisodeInfo(title string) string {
-	title = strings.ToLower(title)
+func cleanTitleMovie(filename string) string {
+	// Remove year (usually 1900-2099)
+	filename = regexp.MustCompile(`\b(19|20)\d{2}\b`).ReplaceAllString(filename, " ")
 
-	// Remove S##E## patterns
-	re := regexp.MustCompile(`s\d{1,2}e\d{1,2}`)
-	title = re.ReplaceAllString(title, " ")
+	// Remove resolution
+	filename = regexp.MustCompile(`\b\d{3,4}p\b`).ReplaceAllString(filename, " ")
 
-	// Remove #x## patterns (e.g., 1x46, 2x03, etc.)
-	reXPattern := regexp.MustCompile(`\d{1,2}x\d{1,3}`)
-	title = reXPattern.ReplaceAllString(title, " ")
+	// Remove codecs
+	filename = regexp.MustCompile(`\b(x|h)\d{3}\b`).ReplaceAllString(filename, " ")
 
-	// Remove other episode patterns
-	episodePatterns := []string{
-		"season", "episode", "ep", "part",
+	// Remove audio formats
+	filename = regexp.MustCompile(`\bddp?\d?(\.\d)?\b`).ReplaceAllString(filename, " ")
+	filename = regexp.MustCompile(`\bdts\b|\bac3\b|\baac\b|\bmp3\b|\bflac\b`).ReplaceAllString(filename, " ")
+
+	// Remove extra release tags
+	extraTags := []string{
+		"final", "proper", "repack", "internal", "limited", "festival",
+		"extended", "unrated", "remastered", "criterion",
+	}
+	for _, tag := range extraTags {
+		filename = strings.ReplaceAll(filename, tag, " ")
 	}
 
-	for _, pattern := range episodePatterns {
-		title = strings.ReplaceAll(title, pattern, " ")
-	}
+	// Remove release group suffix like "-IMMERSE"
+	filename = regexp.MustCompile(`[-._][a-z0-9]{2,}$`).ReplaceAllString(filename, " ")
 
-	return title
-}
+	// Normalize separators
+	filename = strings.NewReplacer(".", " ", "_", " ", "-", " ").Replace(filename)
 
-// removeReleaseGroups removes common release group names and patterns
-func removeReleaseGroups(title string) string {
-	title = strings.ToLower(title)
+	// Remove brackets
+	filename = regexp.MustCompile(`\[.*?\]|\(.*?\)|\{.*?\}`).ReplaceAllString(filename, " ")
 
-	// Common release group patterns (usually at the end after a hyphen)
-	releaseGroups := []string{
-		"tfa", "yts", "rarbg", "etrg", "sparks", "axxo", "ntsc", "pal",
-		"proper", "repack", "internal", "limited", "festival", "readnfo",
-		"subbed", "dubbed", "retail", "custom", "uncut", "extended",
-		"directors", "theatrical", "imax", "remastered", "criterion",
-	}
-
-	for _, group := range releaseGroups {
-		title = strings.ReplaceAll(title, group, " ")
-	}
-
-	return title
-}
-
-// CleanTitle removes common words and characters from titles for better matching
-func CleanTitle(title string) string {
-	title = strings.ToLower(title)
-
-	// Remove file extensions
-	extensions := []string{
-		".mkv", ".mp4", ".avi", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".3gp",
-	}
-	for _, ext := range extensions {
-		title = strings.ReplaceAll(title, ext, "")
-	}
-
-	// Remove episode information first (for TV shows)
-	title = removeEpisodeInfo(title)
-
-	// Remove language tags
-	title = removeLanguageTags(title)
-
-	// Remove quality tags
-	title = removeQualityTags(title)
-
-	// Remove release groups
-	title = removeReleaseGroups(title)
-
-	// Remove brackets, parentheses and their content
-	title = regexp.MustCompile(`\[.*?\]`).ReplaceAllString(title, " ")
-	title = regexp.MustCompile(`\(.*?\)`).ReplaceAllString(title, " ")
-	title = regexp.MustCompile(`\{.*?\}`).ReplaceAllString(title, " ")
-
-	// Replace separators with spaces
-	separators := []string{".", "_", "-", "+", "="}
-	for _, sep := range separators {
-		title = strings.ReplaceAll(title, sep, " ")
-	}
-
-	// Clean up multiple spaces and trim
-	words := strings.Fields(title)
+	// Remove extra whitespace
+	words := strings.Fields(filename)
 	return strings.Join(words, " ")
 }

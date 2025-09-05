@@ -42,3 +42,13 @@ func IsSupportedExtension(ext string) bool {
 	}
 	return false
 }
+
+func GetFileTypeFromExtension(ext string) FileType {
+	for ft, supportedExt := range SupportedExtensions {
+		if ext == supportedExt {
+			return ft
+		}
+	}
+
+	return -1
+}

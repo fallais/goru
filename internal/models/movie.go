@@ -12,12 +12,6 @@ type Movie struct {
 	ExternalIDs   ExternalIDs `json:"external_ids"`
 }
 
-type ExternalIDs struct {
-	TMDBID  string `json:"tmdb_id"`
-	TVDBID  string `json:"tvdb_id"`
-	AniDBID string `json:"anidb_id"`
-}
-
 type Confidence struct {
 	Score float64 `json:"score"`
 }

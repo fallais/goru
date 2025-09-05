@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"goru/internal/models"
-	"goru/internal/utils"
 	"goru/pkg/log"
 
 	"go.uber.org/zap"
@@ -81,7 +80,7 @@ func (fs *FileService) ScanDirectory(dirPath string, recursive bool, mediaTypeOv
 		case "tv":
 			videoFile.MediaType = models.MediaTypeTVShow
 		case "auto":
-			videoFile.MediaType = utils.GuessMediaType(info.Name())
+			videoFile.MediaType = models.GuessMediaType(info.Name())
 		}
 
 		videoFiles = append(videoFiles, videoFile)

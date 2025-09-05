@@ -44,10 +44,16 @@ func New(apiKey string) (providers.Provider, error) {
 	}, nil
 }
 
+func (d *tmdbProvider) Name() string {
+	return "tmdb"
+}
+
 func (d *tmdbProvider) Provide(file *models.VideoFile) error {
 	// Clean the filename for searching
-	cleanName := utils.CleanTitle(file.Filename)
+	cleanName := utils.CleanFilename(file.Filename, file.MediaType)
 	year := providers.ExtractYear(file.Filename)
+
+	log.Debug("providing metadata", zap.String("file", file.Filename), zap.String("clean_name", cleanName), zap.Int("year", year), zap.String("media_type", string(file.MediaType)))
 
 	switch file.MediaType {
 	case models.MediaTypeMovie:
@@ -66,7 +72,7 @@ func (d *tmdbProvider) Provide(file *models.VideoFile) error {
 
 		show, err := d.GetTVShow(cleanName, year)
 		if err != nil {
-			return fmt.Errorf("failed to search TV show: %w", err)
+			return fmt.Errorf("failed to get TV show: %w", err)
 		}
 
 		// Get episode information
