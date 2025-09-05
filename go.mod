@@ -12,6 +12,7 @@ require (
 	github.com/oz/osdb v0.0.0-20221214175751-f169057712ec
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
+	github.com/tidwall/buntdb v1.3.2
 	go.uber.org/zap v1.21.0
 	golang.org/x/sync v0.6.0
 )
@@ -38,7 +39,6 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tidwall/btree v1.4.2 // indirect
-	github.com/tidwall/buntdb v1.3.2 // indirect
 	github.com/tidwall/gjson v1.14.3 // indirect
 	github.com/tidwall/grect v0.1.4 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
