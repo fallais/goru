@@ -5,3 +5,4 @@ export { default as FileListItem } from './FileListItem';
 export { default as FileInfoModal } from './FileInfoModal';
 export { default as ActionsPanel } from './ActionsPanel';
 export { default as ResultsPanel } from './ResultsPanel';
+export { default as ResultsListItem } from './ResultsListItem';

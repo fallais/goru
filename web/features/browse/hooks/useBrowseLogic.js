@@ -1,5 +1,5 @@
 // features/browse/hooks/useBrowseLogic.js
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import { useNotification } from "@/contexts/NotificationContext";
 import { useDefaultDirectoryContext } from "@/contexts/DefaultDirectoryContext";
@@ -27,7 +27,7 @@ export function useBrowseLogic() {
     }
   }, [router.query.path]);
 
-  const loadCurrentDirectory = async () => {
+  const loadCurrentDirectory = useCallback(async () => {
     state.setLoading(true);
     try {
       // Use the default directory from context if available
@@ -53,9 +53,9 @@ export function useBrowseLogic() {
       state.setFiles([]);
     }
     state.setLoading(false);
-  };
+  }, [defaultDirectory, defaultDirectoryLoading, api, state, showError]);
 
-  const loadDirectory = async (path) => {
+  const loadDirectory = useCallback(async (path) => {
     state.setLoading(true);
     state.setFiles([]);
     state.setPlan(null);
@@ -71,22 +71,22 @@ export function useBrowseLogic() {
     }
 
     state.setLoading(false);
-  };
+  }, [api, state, showError]);
 
-  const handleDirectoryClick = (dirPath) => {
+  const handleDirectoryClick = useCallback((dirPath) => {
     loadDirectory(dirPath);
-  };
+  }, [loadDirectory]);
 
-  const handleParentDirectory = () => {
+  const handleParentDirectory = useCallback(() => {
     if (state.currentPath) {
       const parentPath = state.currentPath.substring(0, state.currentPath.lastIndexOf('\\'));
       if (parentPath && parentPath.length > 0) {
         loadDirectory(parentPath);
       }
     }
-  };
+  }, [state.currentPath, loadDirectory]);
 
-  const handleLookup = async () => {
+  const handleLookup = useCallback(async () => {
     if (!state.currentPath || !state.currentPath.trim()) {
       showError("No directory loaded");
       return;
@@ -113,9 +113,9 @@ export function useBrowseLogic() {
     }
 
     state.setLoading(false);
-  };
+  }, [state, api, showError]);
 
-  const handleApply = async () => {
+  const handleApply = useCallback(async () => {
     if (!state.plan || !state.plan.changes || state.plan.changes.length === 0) {
       showError("No plan to apply");
       return;
@@ -134,11 +134,11 @@ export function useBrowseLogic() {
     }
 
     state.setLoading(false);
-  };
+  }, [state, api, showError, showSuccess, loadDirectory]);
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     loadDirectory(state.currentPath);
-  };
+  }, [loadDirectory, state.currentPath]);
 
   return { 
     ...state, 

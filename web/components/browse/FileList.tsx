@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import {
   Paper,
   Typography,
@@ -45,7 +45,7 @@ interface FileListProps {
   onFileHoverLeave: () => void;
 }
 
-function FileList({ 
+const FileList = React.memo(function FileList({ 
   files, 
   plan, 
   loading, 
@@ -56,6 +56,45 @@ function FileList({
   onFileHover,
   onFileHoverLeave
 }: FileListProps): React.JSX.Element {
+  const listRef = useRef<HTMLUListElement>(null);
+  
+  // Use effect to update data-highlighted attributes when highlightedFilePath changes
+  useEffect(() => {
+    if (!listRef.current) return;
+    
+    // Clear all previous highlights
+    const allItems = listRef.current.querySelectorAll('[data-file-path]');
+    allItems.forEach(item => {
+      item.removeAttribute('data-highlighted');
+    });
+    
+    // Set highlight for current path
+    if (highlightedFilePath) {
+      // Find the exact item by comparing the attribute value
+      const allItems = listRef.current.querySelectorAll('[data-file-path]');
+      for (const item of allItems) {
+        if (item.getAttribute('data-file-path') === highlightedFilePath) {
+          item.setAttribute('data-highlighted', 'true');
+          break;
+        }
+      }
+    }
+  }, [highlightedFilePath]);
+  // Memoize the file categorization
+  const { videoFiles, directories, otherFiles } = useMemo(() => {
+    return categorizeFiles(files);
+  }, [files]);
+
+  // Memoize helper functions to avoid recreating them on each render
+  const hasFileChanges = useCallback((file: FileItem): boolean => {
+    if (!plan || !plan.changes) return false;
+    return plan.changes.some(change => change.before.path === file.path);
+  }, [plan]);
+
+  const getFileChange = useCallback((file: FileItem): PlanChange | null => {
+    if (!plan || !plan.changes) return null;
+    return plan.changes.find(change => change.before.path === file.path) || null;
+  }, [plan]);
   if (files.length === 0) {
     return (
       <Paper sx={{ p: 2, mt: 2 }}>
@@ -71,20 +110,6 @@ function FileList({
     );
   }
 
-  const { videoFiles, directories, otherFiles } = categorizeFiles(files);
-
-  // Helper function to check if a file has plan changes
-  const hasFileChanges = (file: FileItem): boolean => {
-    if (!plan || !plan.changes) return false;
-    return plan.changes.some(change => change.before.path === file.path);
-  };
-
-  // Helper function to get the plan change for a file
-  const getFileChange = (file: FileItem): PlanChange | null => {
-    if (!plan || !plan.changes) return null;
-    return plan.changes.find(change => change.before.path === file.path) || null;
-  };
-
   return (
     <Paper sx={{ p: 2, mt: 2 }}>
       <Box sx={{ minHeight: 72, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -97,14 +122,13 @@ function FileList({
         </Typography>
       </Box>
 
-      <List dense sx={{ pt: 0 }}>
+      <List dense sx={{ pt: 0 }} ref={listRef}>
         {/* Directories first */}
         {directories.map((file, index) => (
           <FileListItem
             key={`dir-${index}`}
             file={file}
             fileType="directory"
-            isHighlighted={highlightedFilePath === file.path}
             hasPlanChanges={hasFileChanges(file)}
             planChange={getFileChange(file)}
             onFileClick={onFileClick}
@@ -120,7 +144,6 @@ function FileList({
             key={`video-${index}`}
             file={file}
             fileType="video"
-            isHighlighted={highlightedFilePath === file.path}
             hasPlanChanges={hasFileChanges(file)}
             planChange={getFileChange(file)}
             onFileClick={onFileClick}
@@ -136,7 +159,6 @@ function FileList({
             key={`other-${index}`}
             file={file}
             fileType="other"
-            isHighlighted={highlightedFilePath === file.path}
             hasPlanChanges={hasFileChanges(file)}
             planChange={getFileChange(file)}
             onFileClick={onFileClick}
@@ -154,6 +176,6 @@ function FileList({
       </List>
     </Paper>
   );
-}
+});
 
 export default FileList;

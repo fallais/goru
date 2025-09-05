@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   ListItem,
   ListItemButton,
@@ -28,7 +28,6 @@ interface PlanChange {
 interface FileListItemProps {
   file: FileItem;
   fileType: 'directory' | 'video' | 'other';
-  isHighlighted?: boolean;
   hasPlanChanges?: boolean;
   planChange?: PlanChange | null;
   onFileClick: (file: FileItem) => void;
@@ -37,10 +36,9 @@ interface FileListItemProps {
   onFileHoverLeave?: () => void;
 }
 
-function FileListItem({ 
+const FileListItem = React.memo(function FileListItem({ 
   file, 
   fileType, 
-  isHighlighted = false,
   hasPlanChanges = false,
   planChange = null,
   onFileClick, 
@@ -48,25 +46,25 @@ function FileListItem({
   onFileHover,
   onFileHoverLeave
 }: FileListItemProps): React.JSX.Element {
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     if (file.isDir) {
       onDirectoryClick(file.path);
     } else {
       onFileClick(file);
     }
-  };
+  }, [file.isDir, file.path, file, onDirectoryClick, onFileClick]);
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = useCallback(() => {
     if (hasPlanChanges && onFileHover) {
       onFileHover(file.path);
     }
-  };
+  }, [hasPlanChanges, onFileHover, file.path]);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
     if (hasPlanChanges && onFileHoverLeave) {
       onFileHoverLeave();
     }
-  };
+  }, [hasPlanChanges, onFileHoverLeave]);
 
   const renderIcon = () => {
     // No icons at all for perfect alignment
@@ -91,11 +89,15 @@ function FileListItem({
 
   return (
     <ListItem 
+      data-file-path={file.path}
       sx={{
         px: 0,
         py: 0,
-        backgroundColor: isHighlighted ? 'primary.light' : 'transparent',
         borderRadius: 1,
+        transition: 'background-color 0.15s ease-in-out',
+        '&[data-highlighted="true"]': {
+          backgroundColor: 'primary.light',
+        },
       }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -105,6 +107,7 @@ function FileListItem({
         sx={{
           px: 2,
           py: 1,
+          transition: 'background-color 0.15s ease-in-out',
           '&:hover': {
             backgroundColor: 'grey.100',
           },
@@ -118,6 +121,6 @@ function FileListItem({
       </ListItemButton>
     </ListItem>
   );
-}
+});
 
 export default FileListItem;

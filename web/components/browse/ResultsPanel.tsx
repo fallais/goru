@@ -1,14 +1,13 @@
-import React from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import {
   Paper,
   Typography,
   List,
-  ListItem,
-  ListItemButton,
   Box,
   Chip,
 } from '@mui/material';
 import { categorizeFiles } from '../../utils/fileUtils';
+import ResultsListItem from './ResultsListItem';
 
 interface PlanChange {
   before: {
@@ -34,13 +33,83 @@ interface ResultsPanelProps {
   onPlanResultHoverLeave?: () => void;
 }
 
-function ResultsPanel({ 
+const ResultsPanel = React.memo(function ResultsPanel({ 
   plan, 
   loading, 
   highlightedFilePath, 
   onPlanResultHover, 
   onPlanResultHoverLeave 
 }: ResultsPanelProps): React.JSX.Element {
+  const listRef = useRef<HTMLUListElement>(null);
+  
+  // Use effect to update data-highlighted attributes when highlightedFilePath changes
+  useEffect(() => {
+    if (!listRef.current) return;
+    
+    // Clear all previous highlights
+    const allItems = listRef.current.querySelectorAll('[data-file-path]');
+    allItems.forEach(item => {
+      item.removeAttribute('data-highlighted');
+    });
+    
+    // Set highlight for current path
+    if (highlightedFilePath) {
+      // Find the exact item by comparing the attribute value
+      const allItems = listRef.current.querySelectorAll('[data-file-path]');
+      for (const item of allItems) {
+        if (item.getAttribute('data-file-path') === highlightedFilePath) {
+          item.setAttribute('data-highlighted', 'true');
+          break;
+        }
+      }
+    }
+  }, [highlightedFilePath]);
+  // Memoize the ordered changes calculation
+  const orderedChanges = useMemo(() => {
+    if (!plan || !plan.changes || plan.changes.length === 0) {
+      return [];
+    }
+
+    // Create a sorted list of changes based on file categorization
+    const changesByPath: Record<string, PlanChange> = {};
+    plan.changes.forEach(change => {
+      changesByPath[change.before.path] = change;
+    });
+
+    // Create file objects for sorting using the BEFORE filename 
+    // (this is what appears in the directory listing)
+    const fileObjects = plan.changes.map(change => ({
+      name: change.before.filename,
+      isDir: false, // Plan changes are typically files, not directories
+      path: change.before.path
+    }));
+
+    // Categorize and sort the files the same way as FileList
+    const { videoFiles, directories, otherFiles } = categorizeFiles(fileObjects);
+    
+    // Create ordered list of changes following the same pattern as FileList
+    const ordered: PlanChange[] = [];
+    
+    // Add directory changes first (if any)
+    directories.forEach(file => {
+      const change = changesByPath[file.path];
+      if (change) ordered.push(change);
+    });
+    
+    // Add video file changes
+    videoFiles.forEach(file => {
+      const change = changesByPath[file.path];
+      if (change) ordered.push(change);
+    });
+    
+    // Add other file changes
+    otherFiles.forEach(file => {
+      const change = changesByPath[file.path];
+      if (change) ordered.push(change);
+    });
+
+    return ordered;
+  }, [plan]);
   if (loading) {
     return (
       <Paper sx={{ p: 2, mt: 2, height: 'fit-content' }}>
@@ -87,85 +156,18 @@ function ResultsPanel({
         </Box>
       </Box>
 
-      <List dense sx={{ pt: 0 }}>
-        {(() => {
-          // Create a sorted list of changes based on file categorization
-          const changesByPath: Record<string, PlanChange> = {};
-          plan.changes.forEach(change => {
-            changesByPath[change.before.path] = change;
-          });
-
-          // Create file objects for sorting using the BEFORE filename 
-          // (this is what appears in the directory listing)
-          const fileObjects = plan.changes.map(change => ({
-            name: change.before.filename,
-            isDir: false, // Plan changes are typically files, not directories
-            path: change.before.path
-          }));
-
-          // Categorize and sort the files the same way as FileList
-          const { videoFiles, directories, otherFiles } = categorizeFiles(fileObjects);
-          
-          // Create ordered list of changes following the same pattern as FileList
-          const orderedChanges: PlanChange[] = [];
-          
-          // Add directory changes first (if any)
-          directories.forEach(file => {
-            const change = changesByPath[file.path];
-            if (change) orderedChanges.push(change);
-          });
-          
-          // Add video file changes
-          videoFiles.forEach(file => {
-            const change = changesByPath[file.path];
-            if (change) orderedChanges.push(change);
-          });
-          
-          // Add other file changes
-          otherFiles.forEach(file => {
-            const change = changesByPath[file.path];
-            if (change) orderedChanges.push(change);
-          });
-
-          return orderedChanges.map((change, index) => {
-            const isHighlighted = highlightedFilePath === change.before.path;
-            
-            return (
-              <ListItem
-                key={index}
-                sx={{ 
-                  px: 0, 
-                  py: 0,
-                  backgroundColor: isHighlighted ? 'primary.light' : 'transparent',
-                  borderRadius: 1,
-                }}
-              >
-                <ListItemButton
-                  onMouseEnter={() => onPlanResultHover && onPlanResultHover(change)}
-                  onMouseLeave={() => onPlanResultHoverLeave && onPlanResultHoverLeave()}
-                  sx={{
-                    px: 2,
-                    py: 1,
-                    '&:hover': {
-                      backgroundColor: 'grey.100',
-                    },
-                  }}
-                >
-                  <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
-                    <Box sx={{ flexGrow: 1 }}>
-                      <Typography variant="body2" color="text.primary" sx={{ fontWeight: 'medium' }}>
-                        {change.after?.filename || 'Unknown filename'}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </ListItemButton>
-              </ListItem>
-            );
-          });
-        })()}
+      <List dense sx={{ pt: 0 }} ref={listRef}>
+        {orderedChanges.map((change, index) => (
+          <ResultsListItem
+            key={index}
+            change={change}
+            onPlanResultHover={onPlanResultHover}
+            onPlanResultHoverLeave={onPlanResultHoverLeave}
+          />
+        ))}
       </List>
     </Paper>
   );
-}
+});
 
 export default ResultsPanel;
