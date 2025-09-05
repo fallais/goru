@@ -1,5 +1,7 @@
 # Goru
 
+> **UNDER ACTIVE DEVELOPMENT** : This project is actively being developed. Features may change and some functionality might not be fully stable yet. Please report any issues you encounter.
+
 **Goru** *(Golang Rename Utility)* is a powerful yet simple tool for renaming your video files.  
 It helps you keep your media library clean, organized, and easily searchable—whether you prefer the CLI or a Web App.
 
