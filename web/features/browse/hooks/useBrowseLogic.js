@@ -2,21 +2,21 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { useNotification } from "@/contexts/NotificationContext";
-import { useDirectory } from "@/contexts/DirectoryContext";
+import { useDefaultDirectoryContext } from "@/contexts/DefaultDirectoryContext";
 import { useDirectoryAPI } from "./useDirectoryAPI";
 import { useDirectoryState } from "./useDirectoryState";
 
 export function useBrowseLogic() {
   const router = useRouter();
   const { showError, showSuccess } = useNotification();
-  const { selectDirectory } = useDirectory();
+  const { defaultDirectory, loading: defaultDirectoryLoading } = useDefaultDirectoryContext();
   const api = useDirectoryAPI();
   const state = useDirectoryState();
 
-  // Load current directory on component mount
+  // Load current directory on component mount or when default directory changes
   useEffect(() => {
     loadCurrentDirectory();
-  }, []);
+  }, [defaultDirectory, defaultDirectoryLoading]);
 
   // Handle search path from App Bar
   useEffect(() => {
@@ -30,15 +30,21 @@ export function useBrowseLogic() {
   const loadCurrentDirectory = async () => {
     state.setLoading(true);
     try {
-      const defaultPath = await api.loadDefaultDirectory();
-      console.log('Default directory API response:', defaultPath);
-      
-      if (defaultPath && typeof defaultPath === 'string') {
-        await loadDirectory(defaultPath);
-      } else {
-        console.error('Invalid default path:', defaultPath);
-        state.setCurrentPath("");
-        state.setFiles([]);
+      // Use the default directory from context if available
+      if (defaultDirectory) {
+        await loadDirectory(defaultDirectory);
+      } else if (!defaultDirectoryLoading) {
+        // If not loading and no default directory, try to load from API as fallback
+        const defaultPath = await api.loadDefaultDirectory();
+        console.log('Default directory API response:', defaultPath);
+        
+        if (defaultPath && typeof defaultPath === 'string') {
+          await loadDirectory(defaultPath);
+        } else {
+          console.error('Invalid default path:', defaultPath);
+          state.setCurrentPath("");
+          state.setFiles([]);
+        }
       }
     } catch (e) {
       console.error('Failed to get default directory:', e);
@@ -97,8 +103,7 @@ export function useBrowseLogic() {
         ...savedSettings 
       };
       const planData = await api.lookupPlan({ 
-        currentPath: state.currentPath, 
-        files: state.files, 
+        currentPath: state.currentPath,
         settings 
       });
       state.setPlan(planData);
@@ -131,16 +136,6 @@ export function useBrowseLogic() {
     state.setLoading(false);
   };
 
-  const handleEditLookup = () => {
-    if (!state.currentPath || !state.currentPath.trim()) {
-      showError("No directory selected");
-      return;
-    }
-    const directoryName = state.currentPath.split(/[\\/]/).pop() || "Unknown Directory";
-    selectDirectory({ name: directoryName, path: state.currentPath });
-    router.push("/lookup");
-  };
-
   const handleRefresh = () => {
     loadDirectory(state.currentPath);
   };
@@ -153,7 +148,6 @@ export function useBrowseLogic() {
     handleParentDirectory, 
     handleLookup, 
     handleApply, 
-    handleEditLookup,
     handleRefresh
   };
 }

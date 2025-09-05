@@ -1,10 +1,41 @@
-
+import React from 'react';
 import {
   ListItem,
   ListItemButton,
   Typography,
   Box,
 } from '@mui/material';
+
+interface FileItem {
+  name: string;
+  path: string;
+  isDir: boolean;
+  size?: number;
+}
+
+interface PlanChange {
+  before: {
+    path: string;
+    name: string;
+  };
+  after: {
+    path: string;
+    name: string;
+  };
+  action: number;
+}
+
+interface FileListItemProps {
+  file: FileItem;
+  fileType: 'directory' | 'video' | 'other';
+  isHighlighted?: boolean;
+  hasPlanChanges?: boolean;
+  planChange?: PlanChange | null;
+  onFileClick: (file: FileItem) => void;
+  onDirectoryClick: (dirPath: string) => void;
+  onFileHover?: (filePath: string) => void;
+  onFileHoverLeave?: () => void;
+}
 
 function FileListItem({ 
   file, 
@@ -16,7 +47,7 @@ function FileListItem({
   onDirectoryClick,
   onFileHover,
   onFileHoverLeave
-}) {
+}: FileListItemProps): React.JSX.Element {
   const handleClick = () => {
     if (file.isDir) {
       onDirectoryClick(file.path);

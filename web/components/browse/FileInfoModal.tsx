@@ -1,4 +1,4 @@
-
+import React from 'react';
 import {
   Modal,
   Backdrop,
@@ -21,7 +21,39 @@ import {
 } from '@mui/icons-material';
 import { formatFileSize, getFileExtension, getActionInfo } from '../../utils/fileUtils';
 
-function FileInfoModal({ open, file, plan, onClose }) {
+interface FileItem {
+  name: string;
+  path: string;
+  isDir: boolean;
+  size?: number;
+  modTime?: string;
+}
+
+interface PlanChange {
+  before: {
+    path: string;
+    filename: string;
+  };
+  after: {
+    path: string;
+    filename: string;
+  };
+  action: number;
+  conflict_ids?: string[];
+}
+
+interface Plan {
+  changes: PlanChange[];
+}
+
+interface FileInfoModalProps {
+  open: boolean;
+  file?: FileItem | null;
+  plan?: Plan | null;
+  onClose: () => void;
+}
+
+function FileInfoModal({ open, file, plan, onClose }: FileInfoModalProps): React.JSX.Element | null {
   if (!file) return null;
 
   const change = plan?.changes?.find(c => c.before.path === file.path);
@@ -110,7 +142,7 @@ function FileInfoModal({ open, file, plan, onClose }) {
                         <Chip
                           label={getActionInfo(change.action).label}
                           size="small"
-                          color={getActionInfo(change.action).color}
+                          color={getActionInfo(change.action).color as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
                         />
                       </TableCell>
                     </TableRow>

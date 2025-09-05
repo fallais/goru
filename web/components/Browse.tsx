@@ -1,4 +1,4 @@
-
+import React from 'react';
 import { Box, Grid2 } from '@mui/material';
 import {
   DirectoryBreadcrumbs,
@@ -9,7 +9,11 @@ import {
 } from './browse/index';
 import { useBrowseLogic } from '../features/browse/hooks';
 
-function Browse({ searchPath }) {
+interface BrowseProps {
+  searchPath?: string;
+}
+
+function Browse({ searchPath }: BrowseProps) {
   const {
     // State
     currentPath,
@@ -32,8 +36,8 @@ function Browse({ searchPath }) {
     handleRefresh,
     handleFileHover,
     handleFileHoverLeave,
-    handlePlanResultHover,
-    handlePlanResultHoverLeave,
+    handlePlanHover,
+    handlePlanHoverLeave,
   } = useBrowseLogic();
 
   return (
@@ -75,8 +79,8 @@ function Browse({ searchPath }) {
             plan={plan}
             loading={loading}
             highlightedFilePath={highlightedFilePath}
-            onPlanResultHover={handlePlanResultHover}
-            onPlanResultHoverLeave={handlePlanResultHoverLeave}
+            onPlanResultHover={handlePlanHover}
+            onPlanResultHoverLeave={handlePlanHoverLeave}
           />
         </Grid2>
       </Grid2>

@@ -1,4 +1,4 @@
-
+import React from 'react';
 import {
   Paper,
   Typography,
@@ -10,7 +10,37 @@ import {
 } from '@mui/material';
 import { categorizeFiles } from '../../utils/fileUtils';
 
-function ResultsPanel({ plan, loading, highlightedFilePath, onPlanResultHover, onPlanResultHoverLeave }) {
+interface PlanChange {
+  before: {
+    path: string;
+    filename: string;
+  };
+  after: {
+    path: string;
+    filename: string;
+  };
+  action: number;
+}
+
+interface Plan {
+  changes: PlanChange[];
+}
+
+interface ResultsPanelProps {
+  plan?: Plan | null;
+  loading: boolean;
+  highlightedFilePath?: string | null;
+  onPlanResultHover?: (change: PlanChange) => void;
+  onPlanResultHoverLeave?: () => void;
+}
+
+function ResultsPanel({ 
+  plan, 
+  loading, 
+  highlightedFilePath, 
+  onPlanResultHover, 
+  onPlanResultHoverLeave 
+}: ResultsPanelProps): React.JSX.Element {
   if (loading) {
     return (
       <Paper sx={{ p: 2, mt: 2, height: 'fit-content' }}>
@@ -60,7 +90,7 @@ function ResultsPanel({ plan, loading, highlightedFilePath, onPlanResultHover, o
       <List dense sx={{ pt: 0 }}>
         {(() => {
           // Create a sorted list of changes based on file categorization
-          const changesByPath = {};
+          const changesByPath: Record<string, PlanChange> = {};
           plan.changes.forEach(change => {
             changesByPath[change.before.path] = change;
           });
@@ -77,7 +107,7 @@ function ResultsPanel({ plan, loading, highlightedFilePath, onPlanResultHover, o
           const { videoFiles, directories, otherFiles } = categorizeFiles(fileObjects);
           
           // Create ordered list of changes following the same pattern as FileList
-          const orderedChanges = [];
+          const orderedChanges: PlanChange[] = [];
           
           // Add directory changes first (if any)
           directories.forEach(file => {

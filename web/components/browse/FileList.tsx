@@ -1,4 +1,4 @@
-
+import React from 'react';
 import {
   Paper,
   Typography,
@@ -10,6 +10,41 @@ import {
 import FileListItem from './FileListItem';
 import { categorizeFiles } from '../../utils/fileUtils';
 
+interface FileItem {
+  name: string;
+  path: string;
+  isDir: boolean;
+  size?: number;
+}
+
+interface PlanChange {
+  before: {
+    path: string;
+    name: string;
+  };
+  after: {
+    path: string;
+    name: string;
+  };
+  action: number;
+}
+
+interface Plan {
+  changes: PlanChange[];
+}
+
+interface FileListProps {
+  files: FileItem[];
+  plan?: Plan | null;
+  loading: boolean;
+  currentPath: string;
+  highlightedFilePath?: string | null;
+  onFileClick: (file: FileItem) => void;
+  onDirectoryClick: (dirPath: string) => void;
+  onFileHover: (filePath: string) => void;
+  onFileHoverLeave: () => void;
+}
+
 function FileList({ 
   files, 
   plan, 
@@ -20,7 +55,7 @@ function FileList({
   onDirectoryClick,
   onFileHover,
   onFileHoverLeave
-}) {
+}: FileListProps): React.JSX.Element {
   if (files.length === 0) {
     return (
       <Paper sx={{ p: 2, mt: 2 }}>
@@ -39,13 +74,13 @@ function FileList({
   const { videoFiles, directories, otherFiles } = categorizeFiles(files);
 
   // Helper function to check if a file has plan changes
-  const hasFileChanges = (file) => {
+  const hasFileChanges = (file: FileItem): boolean => {
     if (!plan || !plan.changes) return false;
     return plan.changes.some(change => change.before.path === file.path);
   };
 
   // Helper function to get the plan change for a file
-  const getFileChange = (file) => {
+  const getFileChange = (file: FileItem): PlanChange | null => {
     if (!plan || !plan.changes) return null;
     return plan.changes.find(change => change.before.path === file.path) || null;
   };

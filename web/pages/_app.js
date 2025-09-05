@@ -23,10 +23,9 @@ import {
   Movie,
   Tv,
 } from '@mui/icons-material';
-import { CacheProvider } from '@emotion/react';
 import { useRouter } from 'next/router';
 import { NotificationProvider, useNotification } from '../contexts/NotificationContext';
-import { DirectoryProvider } from '../contexts/DirectoryContext';
+import { DefaultDirectoryProvider } from '../contexts/DefaultDirectoryContext';
 import NotificationSnackbar from '../components/NotificationSnackbar';
 
 const theme = createTheme({
@@ -61,10 +60,10 @@ export default function MyApp(props) {
   };
 
   return (
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <NotificationProvider>
-          <DirectoryProvider>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <NotificationProvider>
+        <DefaultDirectoryProvider>
           <AppBar position="static">
             <Toolbar>
               <Typography variant="h6" component="div" sx={{ mr: 4 }}>
@@ -137,8 +136,8 @@ export default function MyApp(props) {
             <Component {...pageProps} searchPath={searchPath} />
           </Container>
           <NotificationSnackbar />
-        </DirectoryProvider>
-        </NotificationProvider>
-      </ThemeProvider>
+        </DefaultDirectoryProvider>
+      </NotificationProvider>
+    </ThemeProvider>
   );
 }

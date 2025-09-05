@@ -1,21 +1,39 @@
 export interface Plan {
   id?: string;
-  files: PlanFile[];
+  changes: PlanChange[];
+  errors: PlanError[];
   created_at?: string;
   status?: string;
 }
 
-export interface PlanFile {
-  originalPath: string;
-  newPath: string;
-  operation: 'move' | 'rename' | 'copy';
-  status?: 'pending' | 'completed' | 'failed';
+export interface PlanChange {
+  id: string;
+  action: string;
+  before: VideoFile;
+  after: VideoFile;
+  conflict_ids?: string[];
+}
+
+export interface VideoFile {
+  id: string;
+  path: string;
+  filename: string;
+  file_type: string;
+  media_type: string;
+  metadata?: any;
+  conflict_strategy: string;
+}
+
+export interface PlanError {
+  file: string;
+  error: string;
 }
 
 export interface CreatePlanRequest {
-  path: string;
-  files: string[];
-  options?: PlanOptions;
+  directory: string;
+  type?: string;     // "movie", "tv", "auto"
+  provider?: string; // "tmdb", "tvdb", "anidb"
+  recursive?: boolean;
 }
 
 export interface PlanOptions {

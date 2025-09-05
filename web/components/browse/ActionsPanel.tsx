@@ -1,4 +1,4 @@
-
+import React from 'react';
 import {
   Paper,
   Button,
@@ -10,13 +10,21 @@ import {
   CheckCircle,
 } from '@mui/icons-material';
 
+interface ActionsPanelProps {
+  loading: boolean;
+  currentPath: string;
+  onPlan: () => void;
+  onApply: () => void;
+  planExists: boolean;
+}
+
 function ActionsPanel({ 
   loading,
   currentPath,
   onPlan,
   onApply,
   planExists
-}) {
+}: ActionsPanelProps): React.JSX.Element {
   return (
     <Paper sx={{ p: 2, mt: 2 }}>
       <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>

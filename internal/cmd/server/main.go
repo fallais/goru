@@ -60,7 +60,7 @@ func Run(cmd *cobra.Command, args []string) {
 	api.HandleFunc("/directory/default", handlers.DefaultDirectory).Methods("GET")
 
 	// Plan routes
-	api.HandleFunc("/plan/create", planHandler.Create).Methods("POST")
+	api.HandleFunc("/plan/create", planHandler.Create).Methods("GET")
 	api.HandleFunc("/plan/apply", planHandler.Apply).Methods("POST")
 
 	// Movie routes

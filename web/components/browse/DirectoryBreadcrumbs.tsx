@@ -1,4 +1,4 @@
-
+import React from 'react';
 import {
   Breadcrumbs,
   Link,
@@ -12,6 +12,15 @@ import {
   Refresh,
 } from '@mui/icons-material';
 
+interface DirectoryBreadcrumbsProps {
+  currentPath?: string;
+  loading: boolean;
+  onLoadCurrentDirectory: () => void;
+  onLoadDirectory: (path: string) => void;
+  onParentDirectory: () => void;
+  onRefresh: () => void;
+}
+
 function DirectoryBreadcrumbs({ 
   currentPath, 
   loading,
@@ -19,7 +28,7 @@ function DirectoryBreadcrumbs({
   onLoadDirectory, 
   onParentDirectory,
   onRefresh 
-}) {
+}: DirectoryBreadcrumbsProps): React.JSX.Element | null {
   if (!currentPath) return null;
   
   const parts = currentPath.split('\\').filter(part => part.length > 0);

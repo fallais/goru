@@ -2,9 +2,15 @@ import { Plan, CreatePlanRequest, ApplyPlanRequest } from '../../types/plan';
 import { apiRequest } from './config';
 
 export async function createPlan(request: CreatePlanRequest): Promise<Plan> {
-  return apiRequest<Plan>('/api/plan/create', {
-    method: 'POST',
-    body: JSON.stringify(request),
+  const params = new URLSearchParams({
+    directory: request.directory,
+    type: request.type || 'auto',
+    provider: request.provider || 'tmdb',
+    recursive: request.recursive?.toString() || 'true'
+  });
+  
+  return apiRequest<Plan>(`/api/plan/create?${params.toString()}`, {
+    method: 'GET',
   });
 }
 

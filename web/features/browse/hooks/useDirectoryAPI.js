@@ -15,11 +15,12 @@ export function useDirectoryAPI() {
     };
   };
 
-  const lookupPlan = async ({ currentPath, files, settings }) => {
+  const lookupPlan = async ({ currentPath, settings }) => {
     const result = await createPlan({
-      path: currentPath,
-      files: files.map(f => f.path),
-      options: settings,
+      directory: currentPath,
+      type: settings.mediaType || 'auto',
+      provider: settings.provider || 'tmdb',
+      recursive: settings.recursive ?? true,
     });
 
     if (result?.data?.plan) return result.data.plan;

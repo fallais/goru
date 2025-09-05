@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"goru/internal/cmd/common"
 	"goru/internal/models"
@@ -43,11 +42,12 @@ func NewPlanHandler(fileService *files.FileService, formatterService *formatters
 	}
 }
 
-// Create handles plan creation.
+// Create handles plan creation for GET method only.
 func (h *PlanHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var req LookupRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, "invalid request body", http.StatusBadRequest)
+	// Extract parameters from query string
+	req, err := h.parseGetRequest(r)
+	if err != nil {
+		writeError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -86,6 +86,20 @@ func (h *PlanHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, response)
+}
+
+// parseGetRequest extracts LookupRequest parameters from query string
+func (h *PlanHandler) parseGetRequest(r *http.Request) (LookupRequest, error) {
+	query := r.URL.Query()
+
+	req := LookupRequest{
+		Directory: query.Get("directory"),
+		Type:      query.Get("type"),
+		Provider:  query.Get("provider"),
+		Recursive: query.Get("recursive") == "true",
+	}
+
+	return req, nil
 }
 
 // processDirectory processes a directory and returns a plan (similar to CLI plan command)
